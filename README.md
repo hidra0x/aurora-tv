@@ -107,6 +107,11 @@ adb connect 192.168.1.50:5555
 
 Проверено на **Telefunken TF-LED40S19T2S, Android 7.0 (API 24)**: запуск оболочки ~1,8 с, интерфейс пульта, погода, медиатека и плеер работают. После перезагрузки телевизор открывает Aurora TV, а `Home` из приложений возвращает в неё.
 
+Для SmartTube на этой прошивке настроен **always-on VPN ByeByeDPI** через
+одноразовый ADB-root: VPN поднимается после перезагрузки сам, SmartTube stable
+доходит до экрана входа. Подробности и скрипты — в
+[`docs/ROOT-BYPASS.md`](docs/ROOT-BYPASS.md). `/system` при этом не менялся.
+
 Готовый APK: [GitHub Releases](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.0.0) (локально — `dist\AuroraTV-1.0.apk`, SHA-256 в `dist\AuroraTV-1.0.apk.sha256`).
 
 ## Скриншоты
@@ -132,6 +137,7 @@ app/src/main/java/ru/auroratv/launcher/
 - [Как это работает](docs/ARCHITECTURE.md)
 - [План v2 и собственный обход](ROADMAP.md)
 - [SmartTube и сетевой обход](docs/SMARTTUBE.md)
+- [Root + always-on VPN (проверено)](docs/ROOT-BYPASS.md)
 - [История изменений](CHANGELOG.md)
 
 ## Лицензия
