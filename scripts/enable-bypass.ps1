@@ -9,10 +9,24 @@ param(
 
     [int]$Port = 5555,
 
-    [string]$VpnPackage = "io.github.romanvht.byedpi"
+    [string]$VpnPackage = "io.github.romanvht.byedpi",
+
+    [switch]$Force
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $Force) {
+    Write-Host ""
+    Write-Host "ВНИМАНИЕ: always-on VPN может отрезать телевизор от сети и ADB." -ForegroundColor Yellow
+    Write-Host "Если это случится, понадобится физический доступ к ТВ." -ForegroundColor Yellow
+    Write-Host "Не запускайте это удалённо, без возможности нажать кнопки на телевизоре." -ForegroundColor Yellow
+    Write-Host ""
+    $answer = Read-Host "Введите YES, чтобы продолжить"
+    if ($answer -ne "YES") {
+        throw "Отменено."
+    }
+}
 $dev = Join-Path $env:USERPROFILE "android-dev"
 $adb = Join-Path $dev "sdk\platform-tools\adb.exe"
 if (-not (Test-Path $adb)) {

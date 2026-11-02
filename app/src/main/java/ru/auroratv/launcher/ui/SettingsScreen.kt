@@ -1,8 +1,15 @@
 package ru.auroratv.launcher.ui
 
 import android.app.AlertDialog
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.net.Uri
+import android.net.wifi.WifiManager
 import android.provider.Settings as AndroidSettings
+import android.text.format.Formatter
 import android.text.InputType
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -178,23 +185,23 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             ),
 
             Row("h_system", Kind.HEADER, title = "Система"),
-            Row("wifi", Kind.ACTION, title = "Wi-Fi", subtitle = "Системные настройки сети"),
+            Row("wifi", Kind.ACTION, title = "Wi-Fi", subtitle = "Статус, включение и переподключение"),
+            Row("system_settings", Kind.ACTION, title = "Все настройки ТВ", subtitle = "Язык, установка приложений, восстановление"),
             Row("bluetooth", Kind.ACTION, title = "Bluetooth", subtitle = "Пульты, колонки, наушники"),
-            Row("sound", Kind.ACTION, title = "Звук", subtitle = "Громкость и выходы"),
-            Row("display", Kind.ACTION, title = "Дисплей", subtitle = "Яркость, размер, режим"),
-            Row("apps_settings", Kind.ACTION, title = "Приложения", subtitle = "Управление установленными приложениями"),
             Row("datetime", Kind.ACTION, title = "Дата и время", subtitle = "Часовой пояс и формат"),
+            Row("uninstall_app", Kind.ACTION, title = "Удалить приложение…", subtitle = "Выбрать из установленных вручную"),
 
             Row("h_shell", Kind.HEADER, title = "Оболочка"),
             Row(
                 "default_home",
                 Kind.ACTION,
                 title = "Сделать домашним экраном",
-                subtitle = "Команда ADB и выбор лончера",
+                subtitle = "Выбор лончера или возврат штатного",
                 value = "→"
             ),
             Row("reload", Kind.ACTION, title = "Обновить список приложений", subtitle = "Если вы установили новое приложение"),
             Row("restart", Kind.ACTION, title = "Перезапустить оболочку", subtitle = "Без перезагрузки телевизора"),
+            Row("uninstall_self", Kind.ACTION, title = "Удалить Aurora TV", subtitle = "Вернуть штатный домашний экран"),
 
             Row("h_privacy", Kind.HEADER, title = "Приватность"),
             Row(
@@ -245,18 +252,18 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             }
             "city" -> chooseCity()
             "tv" -> host.chooseTvApp()
-            "wifi" -> openSystemSettings(AndroidSettings.ACTION_WIFI_SETTINGS)
-            "bluetooth" -> openSystemSettings(AndroidSettings.ACTION_BLUETOOTH_SETTINGS)
-            "sound" -> openSystemSettings(AndroidSettings.ACTION_SOUND_SETTINGS)
-            "display" -> openSystemSettings(AndroidSettings.ACTION_DISPLAY_SETTINGS)
-            "apps_settings" -> openSystemSettings(AndroidSettings.ACTION_APPLICATION_SETTINGS)
-            "datetime" -> openSystemSettings(AndroidSettings.ACTION_DATE_SETTINGS)
+            "wifi" -> showWifiDialog()
+            "system_settings" -> openVendorSettings(AndroidSettings.ACTION_SETTINGS, VENDOR_MAIN)
+            "bluetooth" -> openVendorSettings(activity = VENDOR_BLUETOOTH)
+            "datetime" -> openVendorSettings(AndroidSettings.ACTION_DATE_SETTINGS, VENDOR_MAIN)
+            "uninstall_app" -> showUninstallDialog()
             "default_home" -> showDefaultHomeDialog()
             "reload" -> {
                 host.reloadApps()
                 host.toast("Обновляю список приложений")
             }
             "restart" -> host.recreate()
+            "uninstall_self" -> confirmUninstall(host.packageName, "Aurora TV")
             "about" -> showAbout()
         }
     }
@@ -356,22 +363,174 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         host.toast("Город: ${city.name}")
     }
 
-    private fun openSystemSettings(action: String) {
-        try {
-            host.startActivity(Intent(action))
+    private fun showWifiDialog() {
+        // Показываем диалог после отпускания OK: иначе key-up может сразу
+        // нажать «Открыть настройки» и увести ТВ в чужой экран.
+        host.window.decorView.postDelayed({ showWifiDialogNow() }, 350L)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun showWifiDialogNow() {
+        val wifi = host.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val info = try {
+            wifi?.connectionInfo
         } catch (_: Throwable) {
-            host.toast("На этом телевизоре нет такого раздела настроек")
+            null
         }
+        val ssid = info?.ssid?.trim('"')?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
+        val enabled = wifi?.isWifiEnabled == true
+        val connected = enabled && ssid != null && (info?.networkId ?: -1) != -1
+        val ip = info?.ipAddress?.takeIf { it != 0 }?.let { Formatter.formatIpAddress(it) }
+
+        val manager = host.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        val capabilities = manager?.let { it.getNetworkCapabilities(it.activeNetwork) }
+        val ethernet = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true
+        val online = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+
+        val status = when {
+            connected && ip != null -> "Wi-Fi: $ssid, IP $ip."
+            connected -> "Wi-Fi: $ssid."
+            enabled -> "Wi-Fi включён, но сеть не подключена."
+            else -> "Wi-Fi выключен."
+        }
+        val extra = when {
+            ethernet -> "Сейчас активен кабель. Кнопка ниже переключит ТВ на Wi-Fi — " +
+                "только по вашему нажатию."
+            online -> "Сеть работает."
+            else -> "Если сохранённая сеть не подключается, откройте «Все настройки ТВ»."
+        }
+
+        val dialog = AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle("Wi-Fi")
+            .setMessage(
+                "$status\n\n$extra\n\n" +
+                    "Aurora не открывает экран «Режим сети» и не переключает сеть сама."
+            )
+            .setPositiveButton(if (enabled) "Переподключиться" else "Включить Wi-Fi") { _, _ ->
+                reconnectWifi(wifi, enabled)
+            }
+            .setNeutralButton("Все настройки") { _, _ ->
+                openVendorSettings(AndroidSettings.ACTION_SETTINGS, VENDOR_MAIN)
+            }
+            .setNegativeButton("Закрыть", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE)?.requestFocus()
+        }
+        dialog.show()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun reconnectWifi(wifi: WifiManager?, wasEnabled: Boolean) {
+        if (wifi == null) {
+            host.toast("Wi-Fi недоступен на этом телевизоре")
+            return
+        }
+        if (!wasEnabled) {
+            val turnedOn = try {
+                wifi.isWifiEnabled || wifi.setWifiEnabled(true)
+            } catch (_: Throwable) {
+                false
+            }
+            if (!turnedOn) {
+                host.toast("Не удалось включить Wi-Fi")
+                return
+            }
+            host.toast("Включаю Wi-Fi…")
+        }
+        host.window.decorView.postDelayed({
+            val reconnected = try {
+                wifi.reconnect()
+            } catch (_: Throwable) {
+                false
+            }
+            host.toast(
+                if (reconnected) "Переподключаю сохранённую сеть…"
+                else "Не удалось переподключиться. Откройте «Все настройки ТВ»."
+            )
+        }, 2500L)
+    }
+
+    private fun openVendorSettings(action: String? = null, activity: String? = null) {
+        val attempts = ArrayList<Intent>(2)
+        if (activity != null) {
+            val intent = if (action == null) Intent() else Intent(action)
+            intent.component = ComponentName(VENDOR_PACKAGE, activity)
+            attempts.add(intent)
+        }
+        if (action != null) attempts.add(Intent(action))
+
+        // Небольшая пауза, чтобы отпускание OK не попало в только что открытый экран
+        // и не переключило «Режим сети» на первом пункте.
+        host.window.decorView.postDelayed({
+            for (intent in attempts) {
+                try {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    host.startActivity(intent)
+                    return@postDelayed
+                } catch (_: Throwable) {
+                    // Пробуем следующий вариант: на другой прошивке может не быть вендорского пакета.
+                }
+            }
+            host.toast("На этом телевизоре нет такого раздела настроек")
+        }, 400L)
+    }
+
+    private fun showUninstallDialog() {
+        val candidates = apps
+            .asSequence()
+            .filter { !it.system }
+            .distinctBy { it.packageName }
+            .sortedBy { it.label.lowercase(Locale("ru")) }
+            .toList()
+        if (candidates.isEmpty()) {
+            host.toast("Нет приложений, которые можно удалить")
+            return
+        }
+        val labels = candidates.map { it.label }.toTypedArray()
+        AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle("Удалить приложение")
+            .setItems(labels) { _, which ->
+                val app = candidates[which]
+                confirmUninstall(app.packageName, app.label)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun confirmUninstall(packageName: String, label: String) {
+        val self = packageName == host.packageName
+        val message = if (self) {
+            "Aurora TV будет удалена, а домашним экраном снова станет штатный лаунчер. " +
+                "Избранное, город и настройки Aurora тоже удалятся."
+        } else {
+            "Приложение «$label» будет удалено с телевизора вместе с его данными."
+        }
+        AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle(if (self) "Удалить Aurora TV?" else "Удалить «$label»?")
+            .setMessage(message)
+            .setPositiveButton("Удалить") { _, _ ->
+                try {
+                    host.startActivity(
+                        Intent(Intent.ACTION_DELETE, Uri.parse("package:$packageName"))
+                    )
+                } catch (_: Throwable) {
+                    host.toast("Не удалось открыть системный установщик")
+                }
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun showDefaultHomeDialog() {
         AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
             .setTitle("Домашний экран")
             .setMessage(
-                "Чтобы Aurora TV стала оболочкой по умолчанию, подключите телевизор к ПК по ADB и выполните:\n\n" +
-                    "adb shell cmd package set-home-activity --user 0 ru.auroratv.launcher/.MainActivity\n\n" +
-                    "Или нажмите «Открыть выбор» и выберите Aurora TV в списке лончеров.\n\n" +
-                    "Откат: удалите приложение — вернётся штатный рабочий стол."
+                "Нажмите «Открыть выбор» и выберите Aurora TV или штатный Launcher.\n\n" +
+                    "Если выбора нет, значит Aurora TV уже назначена домашней. " +
+                    "Чтобы вернуть штатный экран, удалите Aurora TV — прогресс и настройки " +
+                    "оболочки при этом удалятся, а приложения на телевизоре останутся.\n\n" +
+                    "Сброс телевизора для этого не нужен."
             )
             .setPositiveButton("Открыть выбор") { _, _ ->
                 try {
@@ -383,6 +542,9 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
                 } catch (_: Throwable) {
                     host.toast("Не удалось открыть выбор лончера")
                 }
+            }
+            .setNeutralButton("Удалить Aurora") { _, _ ->
+                confirmUninstall(host.packageName, "Aurora TV")
             }
             .setNegativeButton("Закрыть", null)
             .show()
@@ -475,5 +637,11 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             val value: TextView = view.findViewById(R.id.value)
             val chevron: ImageView = view.findViewById(R.id.chevron)
         }
+    }
+
+    private companion object {
+        const val VENDOR_PACKAGE = "com.cvte.tv.androidsetting"
+        const val VENDOR_MAIN = "$VENDOR_PACKAGE.GlobalSettingActivity"
+        const val VENDOR_BLUETOOTH = "$VENDOR_PACKAGE.bluetooth.activity.BluetoothActivity"
     }
 }
