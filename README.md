@@ -1,5 +1,7 @@
 ﻿# Aurora TV
 
+[![Android build](https://github.com/nenasevartem70-cmyk/aurora-tv/actions/workflows/android.yml/badge.svg)](https://github.com/nenasevartem70-cmyk/aurora-tv/actions/workflows/android.yml)
+
 Лёгкая оболочка (лончер) для **Telefunken Android TV** и совместимых устройств.
 Заменяет рабочий стол, но остаётся обычным APK: устанавливается и удаляется по ADB,
 без перепрошивки и риска получить «кирпич».
@@ -105,7 +107,7 @@ adb connect 192.168.1.50:5555
 
 Проверено на **Telefunken TF-LED40S19T2S, Android 7.0 (API 24)**: запуск оболочки ~1,8 с, интерфейс пульта, погода, медиатека и плеер работают. После перезагрузки телевизор открывает Aurora TV, а `Home` из приложений возвращает в неё.
 
-Готовый APK: `dist\AuroraTV-1.0.apk` (SHA-256 в `dist\AuroraTV-1.0.apk.sha256`).
+Готовый APK: [GitHub Releases](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.0.0) (локально — `dist\AuroraTV-1.0.apk`, SHA-256 в `dist\AuroraTV-1.0.apk.sha256`).
 
 ## Скриншоты
 
