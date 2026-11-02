@@ -132,9 +132,7 @@ SmartTube stable запускается и доходит до экрана вх
 в [`docs/ROOT-BYPASS.md`](docs/ROOT-BYPASS.md). `/system` при эксперименте
 не менялся.
 
-Стабильный APK: [GitHub Releases v1.1.0](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.1.0) (локально — `dist\AuroraTV-1.1.apk`).
-
-Beta с каналами и цифровым переключением: [v1.4.0-beta1](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.4.0-beta1) (локально — `dist\AuroraTV-1.4-beta.apk`, SHA-256 в `dist\AuroraTV-1.4-beta.apk.sha256`).
+Текущий APK: [GitHub Releases v1.4.0](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.4.0) (локально — `dist\AuroraTV-1.4.apk`, SHA-256 в `dist\AuroraTV-1.4.apk.sha256`).
 
 ## Скриншоты
 
