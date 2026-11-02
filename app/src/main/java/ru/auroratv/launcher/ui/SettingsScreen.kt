@@ -22,6 +22,8 @@ import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.weather.Cities
 import ru.auroratv.launcher.weather.City
 import ru.auroratv.launcher.weather.WeatherRepository
+import ru.auroratv.launcher.proxy.ProxyService
+import ru.auroratv.launcher.proxy.ProxyStatus
 import java.util.Locale
 
 class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs) {
@@ -110,6 +112,12 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             prefs.tvPackage.isBlank() -> "Авто"
             else -> apps.firstOrNull { it.packageName == prefs.tvPackage }?.label ?: "Не найдено"
         }
+        val proxyValue = when {
+            !prefs.proxyEnabled -> "Выкл"
+            ProxyStatus.running -> "Вкл"
+            ProxyStatus.lastError != null -> "Ошибка"
+            else -> "Запуск…"
+        }
 
         val rows = listOf(
             Row("h_screen", Kind.HEADER, title = "Главный экран"),
@@ -175,6 +183,32 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
                 title = "Кнопка ТВ",
                 subtitle = "Какое приложение открывать для каналов и тюнера",
                 value = tvValue
+            ),
+
+            Row("h_youtube", Kind.HEADER, title = "YouTube и обход"),
+            Row(
+                "own_proxy",
+                Kind.TOGGLE,
+                title = "Свой обход",
+                subtitle = "Локальный SOCKS5 127.0.0.1:${ProxyService.DEFAULT_PORT}, без VPN",
+                value = proxyValue,
+                accent = prefs.proxyEnabled && ProxyStatus.running
+            ),
+            Row(
+                "smarttube_setup",
+                Kind.ACTION,
+                title = "Настроить SmartTube",
+                subtitle = "Один раз указать SOCKS-прокси",
+                value = "→"
+            ),
+            Row("smarttube", Kind.ACTION, title = "Открыть SmartTube", subtitle = "Stable или beta, если установлен"),
+            Row(
+                "proxy_info",
+                Kind.INFO,
+                info = "Свой обход не использует VPN и не требует системного VpnDialogs. " +
+                    "SmartTube → Настройки → Общие → Интернет-цензура → Использовать веб-прокси: " +
+                    "тип SOCKS, хост 127.0.0.1, порт ${ProxyService.DEFAULT_PORT}. " +
+                    "Прокси режет TLS-хендшейк на мелкие сегменты, чтобы обойти SNI-DPI."
             ),
 
             Row("h_system", Kind.HEADER, title = "Система"),
@@ -245,6 +279,9 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             }
             "city" -> chooseCity()
             "tv" -> host.chooseTvApp()
+            "own_proxy" -> toggleProxy()
+            "smarttube_setup" -> showSmartTubeSetup()
+            "smarttube" -> openSmartTube()
             "wifi" -> openSystemSettings(AndroidSettings.ACTION_WIFI_SETTINGS)
             "bluetooth" -> openSystemSettings(AndroidSettings.ACTION_BLUETOOTH_SETTINGS)
             "sound" -> openSystemSettings(AndroidSettings.ACTION_SOUND_SETTINGS)
@@ -362,6 +399,58 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         } catch (_: Throwable) {
             host.toast("На этом телевизоре нет такого раздела настроек")
         }
+    }
+
+    private fun toggleProxy() {
+        prefs.proxyEnabled = !prefs.proxyEnabled
+        if (prefs.proxyEnabled) {
+            ProxyStatus.lastError = null
+            ProxyService.start(host)
+            host.toast("Обход включается: SOCKS5 127.0.0.1:${ProxyService.DEFAULT_PORT}")
+        } else {
+            ProxyService.stop(host)
+            host.toast("Обход выключен")
+        }
+        refreshRows()
+        list.postDelayed({ refreshRows() }, 900)
+    }
+
+    private fun showSmartTubeSetup() {
+        AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle("SmartTube и свой обход")
+            .setMessage(
+                "Один раз настройте SmartTube:\n\n" +
+                    "1. Включите «Свой обход».\n" +
+                    "2. SmartTube → Настройки → Общие → Интернет-цензура.\n" +
+                    "3. Включите «Использовать веб-прокси».\n" +
+                    "4. Тип: SOCKS, хост: 127.0.0.1, порт: ${ProxyService.DEFAULT_PORT}.\n" +
+                    "5. Сохраните и перезапустите SmartTube.\n\n" +
+                    "Если SmartTube уже настроен на порт ${ProxyService.DEFAULT_PORT}, этот шаг пропускается."
+            )
+            .setPositiveButton("Открыть SmartTube") { _, _ -> openSmartTube() }
+            .setNegativeButton("Закрыть", null)
+            .show()
+    }
+
+    private fun openSmartTube() {
+        val packages = listOf(
+            "com.teamsmart.videomanager.tv",
+            "com.liskovsoft.smarttubetv.beta"
+        )
+        for (packageName in packages) {
+            try {
+                val intent = host.packageManager.getLaunchIntentForPackage(packageName)
+                if (intent != null) {
+                    if (prefs.proxyEnabled) ProxyService.start(host)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    host.startActivity(intent)
+                    return
+                }
+            } catch (_: Throwable) {
+                // Try the next package.
+            }
+        }
+        host.toast("SmartTube не установлен")
     }
 
     private fun showDefaultHomeDialog() {

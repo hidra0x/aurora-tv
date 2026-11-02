@@ -22,6 +22,7 @@ import android.widget.Toast
 import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
 import ru.auroratv.launcher.core.Prefs
+import ru.auroratv.launcher.proxy.ProxyService
 import ru.auroratv.launcher.ui.AppsScreen
 import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
@@ -80,6 +81,9 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         setContentView(R.layout.activity_main)
+        if (prefs.proxyEnabled) {
+            ProxyService.start(this)
+        }
 
         content = findViewById(R.id.content)
         nav = findViewById(R.id.nav)

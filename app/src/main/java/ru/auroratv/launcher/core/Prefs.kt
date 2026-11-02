@@ -76,6 +76,12 @@ class Prefs(context: Context) {
             sp.edit().putBoolean(KEY_SHOW_SYSTEM_APPS, value).apply()
         }
 
+    var proxyEnabled: Boolean
+        get() = sp.getBoolean(KEY_PROXY_ENABLED, false)
+        set(value) {
+            sp.edit().putBoolean(KEY_PROXY_ENABLED, value).apply()
+        }
+
     var didAutoPin: Boolean
         get() = sp.getBoolean(KEY_DID_AUTOPIN, false)
         set(value) {
@@ -159,6 +165,7 @@ class Prefs(context: Context) {
         const val KEY_ANIMATIONS = "animations"
         const val KEY_HINTS = "hints"
         const val KEY_SHOW_SYSTEM_APPS = "show_system_apps"
+        const val KEY_PROXY_ENABLED = "proxy_enabled"
         const val KEY_DID_AUTOPIN = "did_autopin"
         const val KEY_TV_PACKAGE = "tv_package"
         const val KEY_WEATHER_TEMP = "weather_temp"
