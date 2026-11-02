@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- Android 7.0 does not ship ISRG Root X1, used by Let's Encrypt endpoints. -->
+            <certificates src="@raw/isrgrootx1" />
+            <!-- Android 7.0 does not ship the HARICA root used by api.met.no. -->
+            <certificates src="@raw/harica_tls_rsa_root_2021" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
