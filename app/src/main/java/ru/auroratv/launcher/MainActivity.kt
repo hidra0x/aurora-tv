@@ -23,6 +23,7 @@ import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
 import ru.auroratv.launcher.core.Channel
 import ru.auroratv.launcher.core.ChannelsRepository
+import ru.auroratv.launcher.core.InfoRepository
 import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.media.PlayerActivity
@@ -187,7 +188,11 @@ class MainActivity : Activity() {
         val number = channelInput.toString()
         val channel = channelFor(number)
         channelNumberView.text = number
-        channelNameView.text = channel?.name ?: "Нет канала"
+        channelNameView.text = when {
+            number == "0" -> "Инфоканал"
+            channel != null -> channel.name
+            else -> "Нет канала"
+        }
         channelOverlay.visibility = View.VISIBLE
         channelOverlay.bringToFront()
         scheduleChannelConfirm()
@@ -208,7 +213,9 @@ class MainActivity : Activity() {
         }
         val channel = channelFor(number)
         hideChannelInput()
-        if (channel == null) {
+        if (number == "0") {
+            showInfoChannel()
+        } else if (channel == null) {
             toast("Канал $number не найден")
         } else {
             playChannel(channel)
@@ -237,6 +244,31 @@ class MainActivity : Activity() {
             startActivity(intent)
         } catch (_: Throwable) {
             toast("Не удалось открыть канал")
+        }
+    }
+
+    fun showInfoChannel() {
+        val episodes = InfoRepository.episodes(this)
+        if (episodes.isEmpty()) {
+            toast("Инфоканал пуст")
+            return
+        }
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            putStringArrayListExtra(
+                PlayerActivity.EXTRA_URIS,
+                ArrayList(episodes.map { it.uri })
+            )
+            putStringArrayListExtra(
+                PlayerActivity.EXTRA_TITLES,
+                ArrayList(episodes.map { it.title })
+            )
+            putExtra(PlayerActivity.EXTRA_START, 0)
+            putExtra(PlayerActivity.EXTRA_LOOP, true)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
+            toast("Не удалось открыть инфоканал")
         }
     }
 

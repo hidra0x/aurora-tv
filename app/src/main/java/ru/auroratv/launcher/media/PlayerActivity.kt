@@ -93,6 +93,9 @@ class PlayerActivity : Activity() {
         playerView.player = exoPlayer
         exoPlayer.setAudioAttributes(AudioAttributes.DEFAULT, true)
         exoPlayer.setHandleAudioBecomingNoisy(true)
+        if (intent.getBooleanExtra(EXTRA_LOOP, false)) {
+            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+        }
 
         val items = uriStrings.mapIndexed { index, value ->
             MediaItem.Builder()
@@ -183,5 +186,6 @@ class PlayerActivity : Activity() {
         const val EXTRA_URIS = "uris"
         const val EXTRA_TITLES = "titles"
         const val EXTRA_START = "start"
+        const val EXTRA_LOOP = "loop"
     }
 }

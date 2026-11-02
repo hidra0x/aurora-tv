@@ -16,6 +16,12 @@ dist/
 # Local test screenshots.
 screenshots/
 
+# Generated info-channel intermediates (final MP4s live in res/raw).
+info/audio/
+info/build/
+info/frames/
+info/tts_jobs.json
+
 # OS / IDE noise.
 .DS_Store
 Thumbs.db

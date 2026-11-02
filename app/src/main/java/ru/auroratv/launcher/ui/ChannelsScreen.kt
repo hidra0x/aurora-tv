@@ -59,6 +59,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         }
         tunerButton = action("Эфирное ТВ") { host.openTv() }
         actions.addView(tunerButton)
+        actions.addView(action("Инфоканал 0") { host.showInfoChannel() })
         actions.addView(action("Плейлист") { showPlaylistDialog() })
         actions.addView(action("Обновить") { refreshChannels() })
         root.addView(
@@ -138,7 +139,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
     }
 
     override fun hint(): String =
-        "OK — смотреть    На главном: наберите номер канала    MENU — настройки"
+        "OK — смотреть    0 — инфоканал    MENU — настройки"
 
     private fun action(label: String, onClick: () -> Unit): TextView =
         makeButton(label, onClick).apply {
