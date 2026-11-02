@@ -18,6 +18,9 @@ class AppsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
     private lateinit var countLabel: TextView
     private lateinit var emptyLabel: TextView
 
+    // На узких/720p-телевизорах 5 колонок могут быть слишком мелкими.
+    private val columns = if (host.resources.configuration.screenWidthDp >= 900) 5 else 4
+
     init {
         val root = LinearLayout(host).apply {
             orientation = LinearLayout.VERTICAL
@@ -31,10 +34,10 @@ class AppsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
             gravity = Gravity.CENTER_VERTICAL
         }
         header.addView(
-            makeText("Приложения", 26f, host.getColor(R.color.text), light = true),
+            makeText("Приложения", 26f, color(R.color.text), light = true),
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
-        countLabel = makeText("", 11f, host.getColor(R.color.text_faint))
+        countLabel = makeText("", 11f, color(R.color.text_faint))
         header.addView(countLabel)
         root.addView(
             header,
@@ -42,11 +45,11 @@ class AppsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
         )
 
         list.apply {
-            layoutManager = GridLayoutManager(host, 5)
+            layoutManager = GridLayoutManager(host, columns)
             adapter = this@AppsScreen.adapter
             setupDefaults()
             setPadding(0, dp(4), 0, dp(4))
-            addItemDecoration(GridSpaceDecoration(5, dp(10)))
+            addItemDecoration(GridSpaceDecoration(columns, dp(10)))
         }
         root.addView(
             list,
@@ -60,7 +63,7 @@ class AppsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
         emptyLabel = makeText(
             "Приложения не найдены",
             13f,
-            host.getColor(R.color.text_dim)
+            color(R.color.text_dim)
         ).apply {
             gravity = Gravity.CENTER
             visibility = View.GONE

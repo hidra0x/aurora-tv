@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -79,16 +80,16 @@ class MediaScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs
             gravity = Gravity.CENTER_VERTICAL
         }
         header.addView(
-            makeText("Медиа", 26f, host.getColor(R.color.text), light = true),
+            makeText("Медиа", 26f, color(R.color.text), light = true),
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
-        header.addView(makeText("Видео и музыка", 11f, host.getColor(R.color.text_faint)))
+        header.addView(makeText("Видео и музыка", 11f, color(R.color.text_faint)))
         root.addView(
             header,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(44))
         )
 
-        pathLabel = makeText("Папки", 11f, host.getColor(R.color.text_faint))
+        pathLabel = makeText("Папки", 11f, color(R.color.text_faint))
         root.addView(
             pathLabel,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(28))
@@ -98,7 +99,7 @@ class MediaScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs
             "Выберите папку с видео или откройте медиатеку телевизора. " +
                 "Для папок доступ выдаётся только к выбранной папке.",
             11f,
-            host.getColor(R.color.text_dim)
+            color(R.color.text_dim)
         ).apply {
             background = host.getDrawable(R.drawable.bg_card)
             setPadding(dp(18), dp(14), dp(18), dp(14))
@@ -242,8 +243,10 @@ class MediaScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs
 
     private fun requestLibrary() {
         if (Build.VERSION.SDK_INT <= 28 &&
-            host.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) !=
-            PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(
+                host,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
         ) {
             AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
                 .setTitle("Доступ к медиатеке")
@@ -643,10 +646,10 @@ class MediaScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs
             }
             holder.icon.setImageResource(icon)
             val tint = when (row.kind) {
-                Kind.ACTION -> host.getColor(R.color.accent)
-                Kind.LIBRARY -> host.getColor(R.color.accent)
-                Kind.FILE -> host.getColor(R.color.text_dim)
-                else -> host.getColor(R.color.text_faint)
+                Kind.ACTION -> ContextCompat.getColor(host, R.color.accent)
+                Kind.LIBRARY -> ContextCompat.getColor(host, R.color.accent)
+                Kind.FILE -> ContextCompat.getColor(host, R.color.text_dim)
+                else -> ContextCompat.getColor(host, R.color.text_faint)
             }
             holder.icon.setColorFilter(tint)
 

@@ -1,0 +1,47 @@
+{
+  "version": "1.4",
+  "episodes": [
+    {
+      "id": "trailer",
+      "title": "Aurora TV 1.4 — трейлер",
+      "description": "Экран, каналы и видео вживую",
+      "duration": 43.3,
+      "file": "trailer.mp4"
+    },
+    {
+      "id": "channels",
+      "title": "Каналы и цифры",
+      "description": "Home, номер канала, OSD и переключение",
+      "duration": 48.8,
+      "file": "channels.mp4"
+    },
+    {
+      "id": "launcher",
+      "title": "Туториал по лаунчеру",
+      "description": "Главный экран, приложения, медиа и настройки",
+      "duration": 41.5,
+      "file": "launcher.mp4"
+    },
+    {
+      "id": "remote",
+      "title": "Пульт и навигация",
+      "description": "OK, BACK, MENU и Home",
+      "duration": 30.5,
+      "file": "remote.mp4"
+    },
+    {
+      "id": "playlist",
+      "title": "Свой M3U-плейлист",
+      "description": "Как добавить каналы провайдера",
+      "duration": 30.8,
+      "file": "playlist.mp4"
+    },
+    {
+      "id": "whatsnew",
+      "title": "Что нового в 1.4",
+      "description": "Каналы, Home, плейлист и Universal",
+      "duration": 37.6,
+      "file": "whatsnew.mp4"
+    }
+  ]
+}

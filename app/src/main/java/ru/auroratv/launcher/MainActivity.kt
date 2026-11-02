@@ -7,26 +7,33 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
+import ru.auroratv.launcher.core.Channel
+import ru.auroratv.launcher.core.ChannelsRepository
+import ru.auroratv.launcher.core.InfoRepository
+import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
+import ru.auroratv.launcher.media.PlayerActivity
 import ru.auroratv.launcher.ui.AppsScreen
+import ru.auroratv.launcher.ui.ChannelsScreen
 import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
 import ru.auroratv.launcher.ui.MediaScreen
 import ru.auroratv.launcher.ui.SettingsScreen
+import ru.auroratv.launcher.ui.VideoScreen
 import ru.auroratv.launcher.ui.dp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,9 +49,16 @@ class MainActivity : Activity() {
     private lateinit var headerClock: TextView
     private lateinit var networkStatus: TextView
     private lateinit var tvButton: TextView
+    private lateinit var channelOverlay: LinearLayout
+    private lateinit var channelNumberView: TextView
+    private lateinit var channelNameView: TextView
+
+    private var channels: List<Channel> = emptyList()
+    private val channelInput = StringBuilder()
+    private var channelHideRunnable: Runnable? = null
 
     private val navItems = mutableListOf<TextView>()
-    private val screens = arrayOfNulls<LauncherScreen>(4)
+    private val screens = arrayOfNulls<LauncherScreen>(6)
     private var current = 0
     private var apps: List<AppEntry> = emptyList()
     private var loading = false
@@ -93,6 +107,9 @@ class MainActivity : Activity() {
         hideSystemUi()
 
         setupHeader()
+        setupChannelOverlay()
+        channels = ChannelsRepository.bundled(this)
+        reloadRemoteChannels()
         buildScreens()
         showScreen(0, focus = false)
         content.post { navItems.firstOrNull()?.requestFocus() }
@@ -101,10 +118,164 @@ class MainActivity : Activity() {
         handler.post(clockRunnable)
     }
 
+    private fun setupChannelOverlay() {
+        val root = findViewById<ViewGroup>(android.R.id.content)
+        channelOverlay = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(12), dp(24), dp(12))
+            background = ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_dialog)
+            elevation = dp(12).toFloat()
+            isFocusable = false
+            isClickable = false
+            visibility = View.GONE
+        }
+        channelNumberView = TextView(this).apply {
+            textSize = 52f
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.accent))
+            gravity = Gravity.CENTER
+            typeface = android.graphics.Typeface.create("sans-serif-light", 0)
+        }
+        channelNameView = TextView(this).apply {
+            textSize = 13f
+            setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_dim))
+            gravity = Gravity.CENTER
+            maxLines = 1
+        }
+        channelOverlay.addView(channelNumberView)
+        channelOverlay.addView(channelNameView)
+        root.addView(
+            channelOverlay,
+            FrameLayout.LayoutParams(
+                dp(260),
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM or Gravity.END
+            ).apply {
+                setMargins(0, 0, dp(40), dp(44))
+            }
+        )
+        channelOverlay.bringToFront()
+    }
+
+    private fun reloadRemoteChannels() {
+        val url = prefs.channelsUrl
+        if (url.isBlank()) return
+        executor.execute {
+            val remote = ChannelsRepository.fromUrl(url)
+            if (remote != null) {
+                runOnUiThread { channels = remote }
+            }
+        }
+    }
+
+    private fun digitForKey(keyCode: Int): Int? = when (keyCode) {
+        KeyEvent.KEYCODE_0, KeyEvent.KEYCODE_NUMPAD_0 -> 0
+        KeyEvent.KEYCODE_1, KeyEvent.KEYCODE_NUMPAD_1 -> 1
+        KeyEvent.KEYCODE_2, KeyEvent.KEYCODE_NUMPAD_2 -> 2
+        KeyEvent.KEYCODE_3, KeyEvent.KEYCODE_NUMPAD_3 -> 3
+        KeyEvent.KEYCODE_4, KeyEvent.KEYCODE_NUMPAD_4 -> 4
+        KeyEvent.KEYCODE_5, KeyEvent.KEYCODE_NUMPAD_5 -> 5
+        KeyEvent.KEYCODE_6, KeyEvent.KEYCODE_NUMPAD_6 -> 6
+        KeyEvent.KEYCODE_7, KeyEvent.KEYCODE_NUMPAD_7 -> 7
+        KeyEvent.KEYCODE_8, KeyEvent.KEYCODE_NUMPAD_8 -> 8
+        KeyEvent.KEYCODE_9, KeyEvent.KEYCODE_NUMPAD_9 -> 9
+        else -> null
+    }
+
+    private fun onChannelDigit(digit: Int) {
+        if (channelInput.length >= 3) channelInput.clear()
+        channelInput.append(digit)
+        val number = channelInput.toString()
+        val channel = channelFor(number)
+        channelNumberView.text = number
+        channelNameView.text = when {
+            number == "0" -> "Инфоканал"
+            channel != null -> channel.name
+            else -> "Нет канала"
+        }
+        channelOverlay.visibility = View.VISIBLE
+        channelOverlay.bringToFront()
+        scheduleChannelConfirm()
+    }
+
+    private fun scheduleChannelConfirm() {
+        channelHideRunnable?.let { handler.removeCallbacks(it) }
+        val runnable = Runnable { confirmChannelInput() }
+        channelHideRunnable = runnable
+        handler.postDelayed(runnable, 3000L)
+    }
+
+    private fun confirmChannelInput() {
+        val number = channelInput.toString()
+        if (number.isBlank()) {
+            hideChannelInput()
+            return
+        }
+        val channel = channelFor(number)
+        hideChannelInput()
+        if (number == "0") {
+            showInfoChannel()
+        } else if (channel == null) {
+            toast("Канал $number не найден")
+        } else {
+            playChannel(channel)
+        }
+    }
+
+    private fun channelFor(number: String): Channel? {
+        val index = number.toIntOrNull() ?: return null
+        return channels.getOrNull(index - 1)
+    }
+
+    private fun hideChannelInput() {
+        channelHideRunnable?.let { handler.removeCallbacks(it) }
+        channelHideRunnable = null
+        channelInput.clear()
+        channelOverlay.visibility = View.GONE
+    }
+
+    private fun playChannel(channel: Channel) {
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            putStringArrayListExtra(PlayerActivity.EXTRA_URIS, arrayListOf(channel.url))
+            putStringArrayListExtra(PlayerActivity.EXTRA_TITLES, arrayListOf(channel.name))
+            putExtra(PlayerActivity.EXTRA_START, 0)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
+            toast("Не удалось открыть канал")
+        }
+    }
+
+    fun showInfoChannel() {
+        val episodes = InfoRepository.episodes(this).shuffled()
+        if (episodes.isEmpty()) {
+            toast("Инфоканал пуст")
+            return
+        }
+        val intent = Intent(this, PlayerActivity::class.java).apply {
+            putStringArrayListExtra(
+                PlayerActivity.EXTRA_URIS,
+                ArrayList(episodes.map { it.uri })
+            )
+            putStringArrayListExtra(
+                PlayerActivity.EXTRA_TITLES,
+                ArrayList(episodes.map { it.title })
+            )
+            putExtra(PlayerActivity.EXTRA_START, 0)
+            putExtra(PlayerActivity.EXTRA_INFO_CHANNEL, true)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
+            toast("Не удалось открыть инфоканал")
+        }
+    }
+
     private fun setupHeader() {
         tvButton.setOnClickListener { openTv() }
 
-        val labels = listOf("Главная", "Приложения", "Медиа", "Настройки")
+        val labels = listOf("Главная", "Приложения", "Медиа", "Видео", "Каналы", "Настройки")
         labels.forEachIndexed { index, label ->
             val item = TextView(this).apply {
                 text = label
@@ -131,7 +302,9 @@ class MainActivity : Activity() {
         screens[0] = HomeScreen(this, prefs)
         screens[1] = AppsScreen(this, prefs)
         screens[2] = MediaScreen(this, prefs)
-        screens[3] = SettingsScreen(this, prefs)
+        screens[3] = VideoScreen(this, prefs)
+        screens[4] = ChannelsScreen(this, prefs)
+        screens[5] = SettingsScreen(this, prefs)
         screens.forEach { screen ->
             screen?.visibility = View.GONE
             content.addView(screen)
@@ -163,7 +336,9 @@ class MainActivity : Activity() {
     fun showHome() = showScreen(0)
     fun showApps() = showScreen(1)
     fun showMedia() = showScreen(2)
-    fun showSettings() = showScreen(3)
+    fun showVideo() = showScreen(3)
+    fun showChannels() = showScreen(4)
+    fun showSettings() = showScreen(5)
 
     fun focusNavigation() {
         navItems.firstOrNull()?.requestFocus()
@@ -178,8 +353,8 @@ class MainActivity : Activity() {
     private fun updateNavItem(index: Int, focused: Boolean) {
         val color = when {
             focused -> Color.WHITE
-            index == current -> getColor(R.color.accent)
-            else -> getColor(R.color.text_dim)
+            index == current -> ContextCompat.getColor(this, R.color.accent)
+            else -> ContextCompat.getColor(this, R.color.text_dim)
         }
         navItems.getOrNull(index)?.setTextColor(color)
     }
@@ -305,11 +480,11 @@ class MainActivity : Activity() {
     }
 
     private fun updateNetwork() {
-        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        val capabilities = manager?.getNetworkCapabilities(manager.activeNetwork)
-        val online = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        val online = NetworkState.isOnline(this)
         networkStatus.text = if (online) "● Онлайн" else "● Офлайн"
-        networkStatus.setTextColor(getColor(if (online) R.color.green else R.color.text_faint))
+        networkStatus.setTextColor(
+            ContextCompat.getColor(this, if (online) R.color.green else R.color.text_faint)
+        )
     }
 
     override fun onStart() {
@@ -332,6 +507,7 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        hideChannelInput()
         if (receiverRegistered) {
             unregisterReceiver(packageReceiver)
             receiverRegistered = false
@@ -363,6 +539,25 @@ class MainActivity : Activity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val digit = digitForKey(keyCode)
+        if (digit != null) {
+            onChannelDigit(digit)
+            return true
+        }
+        if (channelOverlay.visibility == View.VISIBLE) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_ENTER,
+                KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                    confirmChannelInput()
+                    return true
+                }
+                KeyEvent.KEYCODE_BACK -> {
+                    hideChannelInput()
+                    return true
+                }
+            }
+        }
         when (keyCode) {
             KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_SETTINGS -> {
                 showSettings()
@@ -416,6 +611,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         handler.removeCallbacks(clockRunnable)
+        channelHideRunnable?.let { handler.removeCallbacks(it) }
         executor.shutdownNow()
         super.onDestroy()
     }

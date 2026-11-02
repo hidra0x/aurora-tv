@@ -21,6 +21,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import ru.auroratv.launcher.core.InfoRepository
 import kotlin.math.roundToInt
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -30,6 +31,11 @@ class PlayerActivity : Activity() {
     private var titleView: TextView? = null
     private val handler = Handler(Looper.getMainLooper())
     private var hideTitle: Runnable? = null
+    private var infoChannel = false
+    private var infoUris: ArrayList<String> = arrayListOf()
+    private var infoTitles: ArrayList<String> = arrayListOf()
+    private var tipView: TextView? = null
+    private var hideTip: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +47,9 @@ class PlayerActivity : Activity() {
         }
         val titles = intent.getStringArrayListExtra(EXTRA_TITLES)
         val start = intent.getIntExtra(EXTRA_START, 0).coerceIn(0, uriStrings.lastIndex)
+        infoChannel = intent.getBooleanExtra(EXTRA_INFO_CHANNEL, false)
+        infoUris = ArrayList(uriStrings)
+        infoTitles = ArrayList(titles ?: emptyList())
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         hideSystemUi()
@@ -87,12 +96,16 @@ class PlayerActivity : Activity() {
             }
         )
         scheduleTitleHide()
+        if (infoChannel) setupInfoTips(root)
 
         val exoPlayer = ExoPlayer.Builder(this).build()
         player = exoPlayer
         playerView.player = exoPlayer
         exoPlayer.setAudioAttributes(AudioAttributes.DEFAULT, true)
         exoPlayer.setHandleAudioBecomingNoisy(true)
+        if (intent.getBooleanExtra(EXTRA_LOOP, false)) {
+            exoPlayer.repeatMode = Player.REPEAT_MODE_ALL
+        }
 
         val items = uriStrings.mapIndexed { index, value ->
             MediaItem.Builder()
@@ -108,16 +121,102 @@ class PlayerActivity : Activity() {
         exoPlayer.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 val index = exoPlayer.currentMediaItemIndex
-                title.text = titles?.getOrNull(index)
-                    ?: mediaItem?.mediaMetadata?.title
-                    ?: ""
+                title.text = if (infoChannel) {
+                    infoTitles.getOrNull(index).orEmpty()
+                } else {
+                    titles?.getOrNull(index)
+                        ?: mediaItem?.mediaMetadata?.title
+                        ?: ""
+                }
                 title.alpha = 1f
                 scheduleTitleHide()
+                if (infoChannel) showTip()
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (infoChannel && playbackState == Player.STATE_ENDED) {
+                    restartInfoPlaylist()
+                }
             }
         })
         exoPlayer.prepare()
         exoPlayer.playWhenReady = true
         playerView.requestFocus()
+        if (infoChannel) {
+            handler.postDelayed({ showTip() }, 900L)
+        }
+    }
+
+    private fun setupInfoTips(root: FrameLayout) {
+        val tip = TextView(this).apply {
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            maxLines = 2
+            setPadding(dp(22), dp(10), dp(22), dp(10))
+            background = GradientDrawable().apply {
+                setColor(Color.argb(220, 8, 12, 18))
+                cornerRadius = dp(14).toFloat()
+            }
+            alpha = 0f
+            maxWidth = dp(900)
+        }
+        tipView = tip
+        root.addView(
+            tip,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            ).apply {
+                setMargins(dp(40), 0, dp(40), dp(100))
+            }
+        )
+    }
+
+    private fun showTip() {
+        val tip = tipView ?: return
+        val tips = InfoRepository.tips()
+        if (tips.isEmpty()) return
+        tip.text = tips.random()
+        hideTip?.let { handler.removeCallbacks(it) }
+        tip.animate().cancel()
+        tip.alpha = 0f
+        tip.animate().alpha(1f).setDuration(220).start()
+        val hide = Runnable {
+            tip.animate().alpha(0f).setDuration(350).start()
+        }
+        hideTip = hide
+        handler.postDelayed(hide, 4500L)
+    }
+
+    private fun restartInfoPlaylist() {
+        val current = player ?: return
+        if (infoUris.size <= 1) {
+            current.seekTo(0)
+            current.play()
+            showTip()
+            return
+        }
+        val order = infoUris.indices.shuffled()
+        val newUris = ArrayList(order.map { infoUris[it] })
+        val newTitles = ArrayList(order.map { infoTitles.getOrNull(it).orEmpty() })
+        infoUris = newUris
+        infoTitles = newTitles
+        val items = newUris.mapIndexed { index, value ->
+            MediaItem.Builder()
+                .setUri(Uri.parse(value))
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(newTitles.getOrNull(index).orEmpty())
+                        .build()
+                )
+                .build()
+        }
+        current.setMediaItems(items, 0, 0L)
+        current.prepare()
+        current.playWhenReady = true
+        showTip()
     }
 
     override fun onStop() {
@@ -127,6 +226,7 @@ class PlayerActivity : Activity() {
 
     override fun onDestroy() {
         hideTitle?.let { handler.removeCallbacks(it) }
+        hideTip?.let { handler.removeCallbacks(it) }
         player?.release()
         player = null
         super.onDestroy()
@@ -183,5 +283,7 @@ class PlayerActivity : Activity() {
         const val EXTRA_URIS = "uris"
         const val EXTRA_TITLES = "titles"
         const val EXTRA_START = "start"
+        const val EXTRA_LOOP = "loop"
+        const val EXTRA_INFO_CHANNEL = "info_channel"
     }
 }

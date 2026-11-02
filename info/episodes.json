@@ -1,0 +1,397 @@
+{
+  "version": "1.4",
+  "episodes": [
+    {
+      "id": "trailer",
+      "title": "Aurora TV 1.4 — трейлер",
+      "description": "Короткий трейлер лаунчера: экран, каналы, видео.",
+      "template": "trailer",
+      "voice_rate": 1,
+      "music": true,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "AURORA TV",
+          "subtitle": "Твой телевизор. Без лишнего.",
+          "text": "Aurora TV — лёгкий лаунчер для Android TV.",
+          "duration": 4.5
+        },
+        {
+          "type": "screenshot",
+          "file": "home.png",
+          "caption": "Всё на одном экране",
+          "text": "Часы, погода, избранное и приложения.",
+          "duration": 4.0
+        },
+        {
+          "type": "clip",
+          "file": "aurora_nav.mp4",
+          "start": 1.0,
+          "title": "Вживую",
+          "caption": "Навигация с пульта",
+          "text": "Вот как это выглядит вживую.",
+          "duration": 8.0
+        },
+        {
+          "type": "screenshot",
+          "file": "channels.png",
+          "caption": "Каналы цифрами",
+          "text": "Набери номер на пульте — и смотри.",
+          "duration": 4.0
+        },
+        {
+          "type": "clip",
+          "file": "aurora_channels.mp4",
+          "start": 1.0,
+          "title": "Каналы вживую",
+          "caption": "Набери 1 — и канал играет",
+          "text": "Набери номер — и канал запустится.",
+          "duration": 7.0
+        },
+        {
+          "type": "screenshot",
+          "file": "video.png",
+          "caption": "Видео рядом",
+          "text": "RuTube и SmartTube в одном месте.",
+          "duration": 4.0
+        },
+        {
+          "type": "screenshot",
+          "file": "apps.png",
+          "caption": "Быстро и без лишнего",
+          "text": "Без рекламы, аналитики и Google Play Services.",
+          "duration": 4.0
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV 1.4",
+          "subtitle": "Обновляйся",
+          "text": "github.com/nenasevartem70-cmyk/aurora-tv",
+          "duration": 4.5
+        }
+      ]
+    },
+    {
+      "id": "channels",
+      "title": "Каналы и цифры",
+      "description": "Как выбрать канал по номеру и вернуться в Aurora.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "КАНАЛЫ",
+          "subtitle": "Номер — и эфир",
+          "text": "Как смотреть каналы в Aurora TV.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "home.png",
+          "title": "Home",
+          "caption": "Нажми Home — откроется Aurora.",
+          "text": "Нажми Home. Если открылось штатное ТВ — нажми Home ещё раз.",
+          "duration": 6.0
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "channels.png",
+          "title": "Список каналов",
+          "caption": "Номера и названия — в разделе «Каналы».",
+          "text": "В разделе «Каналы» видны номера и названия.",
+          "duration": 6.0
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "channel-osd.png",
+          "title": "Набери номер",
+          "caption": "Например, 1 — НТВ HD.",
+          "text": "Набери номер на пульте, например один.",
+          "focus": [1280, 740, 640, 300],
+          "zoom": true,
+          "duration": 6.0
+        },
+        {
+          "type": "clip",
+          "file": "aurora_channels.mp4",
+          "start": 2.0,
+          "title": "Вживую",
+          "caption": "Список, OSD и запуск",
+          "text": "Вот как это выглядит на телевизоре.",
+          "duration": 6.0
+        },
+        {
+          "type": "title",
+          "title": "OK ИЛИ 3 СЕКУНДЫ",
+          "subtitle": "Канал запустится сам",
+          "text": "Канал запустится сам. OK — сразу, BACK — отмена.",
+          "duration": 5.5
+        },
+        {
+          "type": "title",
+          "title": "HOME ТУДА-ОБРАТНО",
+          "subtitle": "Штатное ТВ ↔ Aurora",
+          "text": "Home переключает штатное ТВ и Aurora.",
+          "duration": 5.0
+        },
+        {
+          "type": "outro",
+          "title": "0 — ИНФОКАНАЛ",
+          "subtitle": "Вернуться к этому каналу",
+          "text": "В Aurora набери ноль, чтобы вернуться к инфоканалу.",
+          "duration": 5.0
+        }
+      ]
+    },
+    {
+      "id": "launcher",
+      "title": "Туториал по лаунчеру",
+      "description": "Главный экран, приложения, медиа, настройки и видео.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "ЛАУНЧЕР",
+          "subtitle": "Aurora TV за минуту",
+          "text": "Короткий туториал по Aurora TV.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "home.png",
+          "title": "Главный экран",
+          "caption": "Часы, погода, избранное и приложения.",
+          "text": "На главном экране — часы, погода, избранное и приложения.",
+          "duration": 6.0
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "apps.png",
+          "title": "Приложения",
+          "caption": "Все приложения в одной сетке.",
+          "text": "В разделе «Приложения» — все установленные приложения.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "media.png",
+          "title": "Медиа",
+          "caption": "Файлы, папки и встроенный плеер.",
+          "text": "В разделе «Медиа» — файлы, папки и встроенный плеер.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 4,
+          "file": "video.png",
+          "title": "Видео",
+          "caption": "RuTube и SmartTube.",
+          "text": "В разделе «Видео» — RuTube и SmartTube.",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 5,
+          "file": "settings.png",
+          "title": "Настройки",
+          "caption": "Wi-Fi, каналы, удаление приложений.",
+          "text": "В настройках — Wi-Fi, каналы и удаление приложений.",
+          "duration": 5.5
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV",
+          "subtitle": "github.com/nenasevartem70-cmyk/aurora-tv",
+          "text": "Спасибо за просмотр.",
+          "duration": 4.5
+        }
+      ]
+    },
+    {
+      "id": "remote",
+      "title": "Пульт и навигация",
+      "description": "OK, BACK, MENU и Home в Aurora.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "ПУЛЬТ",
+          "subtitle": "Четыре кнопки",
+          "text": "Как управлять Aurora TV с пульта.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "home.png",
+          "title": "OK",
+          "caption": "Открыть приложение или канал.",
+          "text": "OK открывает выбранный пункт.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "channels.png",
+          "title": "BACK",
+          "caption": "Вернуться на главный экран.",
+          "text": "BACK возвращает на главный экран.",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "settings.png",
+          "title": "MENU",
+          "caption": "Настройки Aurora из любого раздела.",
+          "text": "MENU открывает настройки Aurora.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 4,
+          "file": "home.png",
+          "title": "HOME",
+          "caption": "Переключает штатное ТВ и Aurora.",
+          "text": "HOME переключает штатное ТВ и Aurora.",
+          "duration": 6.0
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV",
+          "subtitle": "Просто. Быстро. С пульта.",
+          "text": "Спасибо за просмотр.",
+          "duration": 4.0
+        }
+      ]
+    },
+    {
+      "id": "playlist",
+      "title": "Свой M3U-плейлист",
+      "description": "Как добавить каналы провайдера в Aurora.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "ПЛЕЙЛИСТ",
+          "subtitle": "Свои каналы",
+          "text": "Как подключить M3U-плейлист в Aurora TV.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "channels.png",
+          "title": "Каналы",
+          "caption": "Открой раздел «Каналы».",
+          "text": "Открой раздел «Каналы».",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "channels.png",
+          "title": "Плейлист",
+          "caption": "Нажми «Плейлист».",
+          "text": "Нажми кнопку «Плейлист».",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "settings.png",
+          "title": "Ссылка",
+          "caption": "Вставь HTTPS-ссылку на M3U.",
+          "text": "Вставь ссылку на легальный M3U-плейлист.",
+          "duration": 6.0
+        },
+        {
+          "type": "step",
+          "step": 4,
+          "file": "channels.png",
+          "title": "Номера",
+          "caption": "Каналы идут в порядке плейлиста.",
+          "text": "Каналы идут в порядке плейлиста.",
+          "duration": 5.5
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV",
+          "subtitle": "Свои каналы — свои номера",
+          "text": "Спасибо за просмотр.",
+          "duration": 4.0
+        }
+      ]
+    },
+    {
+      "id": "whatsnew",
+      "title": "Что нового в 1.4",
+      "description": "Каналы, цифры, Home и плейлист.",
+      "template": "whatsnew",
+      "voice_rate": -1,
+      "music": true,
+      "scenes": [
+        {
+          "type": "title",
+          "version": "1.4",
+          "title": "ЧТО НОВОГО",
+          "subtitle": "Каналы. Цифры. Home.",
+          "text": "Что нового в Aurora TV 1.4.",
+          "duration": 5.0
+        },
+        {
+          "type": "feature",
+          "file": "channels.png",
+          "title": "Каналы и цифры",
+          "bullets": ["Номер на пульте", "OSD с названием", "Автозапуск через 3 секунды"],
+          "text": "Каналы и цифры. Набери номер — канал запустится сам.",
+          "duration": 7.0
+        },
+        {
+          "type": "feature",
+          "file": "home.png",
+          "title": "Home-переключение",
+          "bullets": ["Home — штатное ТВ", "Home ещё раз — Aurora", "Работает из плеера"],
+          "text": "Home переключает штатное ТВ и Aurora.",
+          "duration": 7.0
+        },
+        {
+          "type": "feature",
+          "file": "channel-osd.png",
+          "title": "Свой плейлист",
+          "bullets": ["M3U-ссылка", "Каналы провайдера", "Номера по порядку"],
+          "text": "Можно подключить свой M3U-плейлист.",
+          "duration": 6.0
+        },
+        {
+          "type": "feature",
+          "file": "apps.png",
+          "title": "Universal",
+          "bullets": ["Android 5.0+", "Без Google Play Services", "Один APK"],
+          "text": "Один APK для Android 5 и новее.",
+          "duration": 6.0
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV 1.4",
+          "subtitle": "Обновляйся",
+          "text": "Спасибо за просмотр. Обновление уже на GitHub.",
+          "duration": 5.0
+        }
+      ]
+    }
+  ]
+}
