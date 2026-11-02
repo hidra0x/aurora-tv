@@ -150,6 +150,12 @@ class Prefs(context: Context) {
         mediaFolders = mediaFolders.filterNot { it == uri }
     }
 
+    var channelsUrl: String
+        get() = sp.getString(KEY_CHANNELS_URL, "").orEmpty()
+        set(value) {
+            sp.edit().putString(KEY_CHANNELS_URL, value.trim()).apply()
+        }
+
     private companion object {
         const val KEY_FAVORITES = "favorites"
         const val KEY_WEATHER_ENABLED = "weather_enabled"
@@ -166,5 +172,6 @@ class Prefs(context: Context) {
         const val KEY_WEATHER_TIME = "weather_time"
         const val KEY_WEATHER_CITY = "weather_city"
         const val KEY_MEDIA_FOLDERS = "media_folders"
+        const val KEY_CHANNELS_URL = "channels_url"
     }
 }
