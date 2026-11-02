@@ -24,11 +24,29 @@
           "duration": 4.0
         },
         {
+          "type": "clip",
+          "file": "aurora_nav.mp4",
+          "start": 1.0,
+          "title": "Вживую",
+          "caption": "Навигация с пульта",
+          "text": "Вот как это выглядит вживую.",
+          "duration": 8.0
+        },
+        {
           "type": "screenshot",
           "file": "channels.png",
           "caption": "Каналы цифрами",
           "text": "Набери номер на пульте — и смотри.",
           "duration": 4.0
+        },
+        {
+          "type": "clip",
+          "file": "aurora_channels.mp4",
+          "start": 1.0,
+          "title": "Каналы вживую",
+          "caption": "Набери 1 — и канал играет",
+          "text": "Набери номер — и канал запустится.",
+          "duration": 7.0
         },
         {
           "type": "screenshot",
@@ -95,6 +113,15 @@
           "text": "Набери номер на пульте, например один.",
           "focus": [1280, 740, 640, 300],
           "zoom": true,
+          "duration": 6.0
+        },
+        {
+          "type": "clip",
+          "file": "aurora_channels.mp4",
+          "start": 2.0,
+          "title": "Вживую",
+          "caption": "Список, OSD и запуск",
+          "text": "Вот как это выглядит на телевизоре.",
           "duration": 6.0
         },
         {
@@ -186,6 +213,126 @@
           "subtitle": "github.com/nenasevartem70-cmyk/aurora-tv",
           "text": "Спасибо за просмотр.",
           "duration": 4.5
+        }
+      ]
+    },
+    {
+      "id": "remote",
+      "title": "Пульт и навигация",
+      "description": "OK, BACK, MENU и Home в Aurora.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "ПУЛЬТ",
+          "subtitle": "Четыре кнопки",
+          "text": "Как управлять Aurora TV с пульта.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "home.png",
+          "title": "OK",
+          "caption": "Открыть приложение или канал.",
+          "text": "OK открывает выбранный пункт.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "channels.png",
+          "title": "BACK",
+          "caption": "Вернуться на главный экран.",
+          "text": "BACK возвращает на главный экран.",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "settings.png",
+          "title": "MENU",
+          "caption": "Настройки Aurora из любого раздела.",
+          "text": "MENU открывает настройки Aurora.",
+          "duration": 5.5
+        },
+        {
+          "type": "step",
+          "step": 4,
+          "file": "home.png",
+          "title": "HOME",
+          "caption": "Переключает штатное ТВ и Aurora.",
+          "text": "HOME переключает штатное ТВ и Aurora.",
+          "duration": 6.0
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV",
+          "subtitle": "Просто. Быстро. С пульта.",
+          "text": "Спасибо за просмотр.",
+          "duration": 4.0
+        }
+      ]
+    },
+    {
+      "id": "playlist",
+      "title": "Свой M3U-плейлист",
+      "description": "Как добавить каналы провайдера в Aurora.",
+      "template": "tutorial",
+      "voice_rate": -1,
+      "music": false,
+      "scenes": [
+        {
+          "type": "title",
+          "title": "ПЛЕЙЛИСТ",
+          "subtitle": "Свои каналы",
+          "text": "Как подключить M3U-плейлист в Aurora TV.",
+          "duration": 4.5
+        },
+        {
+          "type": "step",
+          "step": 1,
+          "file": "channels.png",
+          "title": "Каналы",
+          "caption": "Открой раздел «Каналы».",
+          "text": "Открой раздел «Каналы».",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 2,
+          "file": "channels.png",
+          "title": "Плейлист",
+          "caption": "Нажми «Плейлист».",
+          "text": "Нажми кнопку «Плейлист».",
+          "duration": 5.0
+        },
+        {
+          "type": "step",
+          "step": 3,
+          "file": "settings.png",
+          "title": "Ссылка",
+          "caption": "Вставь HTTPS-ссылку на M3U.",
+          "text": "Вставь ссылку на легальный M3U-плейлист.",
+          "duration": 6.0
+        },
+        {
+          "type": "step",
+          "step": 4,
+          "file": "channels.png",
+          "title": "Номера",
+          "caption": "Каналы идут в порядке плейлиста.",
+          "text": "Каналы идут в порядке плейлиста.",
+          "duration": 5.5
+        },
+        {
+          "type": "outro",
+          "title": "AURORA TV",
+          "subtitle": "Свои каналы — свои номера",
+          "text": "Спасибо за просмотр.",
+          "duration": 4.0
         }
       ]
     },

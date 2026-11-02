@@ -248,7 +248,7 @@ class MainActivity : Activity() {
     }
 
     fun showInfoChannel() {
-        val episodes = InfoRepository.episodes(this)
+        val episodes = InfoRepository.episodes(this).shuffled()
         if (episodes.isEmpty()) {
             toast("Инфоканал пуст")
             return
@@ -263,7 +263,7 @@ class MainActivity : Activity() {
                 ArrayList(episodes.map { it.title })
             )
             putExtra(PlayerActivity.EXTRA_START, 0)
-            putExtra(PlayerActivity.EXTRA_LOOP, true)
+            putExtra(PlayerActivity.EXTRA_INFO_CHANNEL, true)
         }
         try {
             startActivity(intent)

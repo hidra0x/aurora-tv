@@ -314,6 +314,26 @@ def tutorial_frame(scene: dict, episode: dict) -> Image.Image:
     return image
 
 
+def clip_overlay(scene: dict, episode: dict) -> Image.Image:
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    draw.rectangle((0, 0, W, 128), fill=(4, 7, 10, 238))
+    draw.rectangle((0, H - 250, W, H), fill=(4, 7, 10, 238))
+    draw_logo(draw, 64, 46, 26)
+    draw_tag(draw, f"AURORA TV {episode.get('version', '1.4')}", W - 300, 46, DIM)
+    draw.rectangle((0, H - 252, W, H - 248), fill=(*ACCENT, 120))
+    title = scene.get("title", "")
+    caption = scene.get("caption", "")
+    y = H - 205
+    if title:
+        draw.text((80, y), title, font=font(36, "bold"), fill=TEXT)
+        y += 48
+    if caption:
+        lines = wrap(draw, caption, font(27, "regular"), W - 160)
+        draw_lines(draw, lines[:2], font(27, "regular"), DIM, 80, y, 36)
+    return overlay
+
+
 def feature_frame(scene: dict, episode: dict) -> Image.Image:
     image = gradient()
     draw = ImageDraw.Draw(image)
@@ -485,6 +505,33 @@ def build_segment(frame: Path, audio: Path, duration: float, out: Path) -> None:
     ])
 
 
+def build_clip_segment(
+    clip: Path,
+    overlay: Path,
+    audio: Path,
+    start: float,
+    duration: float,
+    out: Path,
+) -> None:
+    fade_out = max(0.0, duration - 0.35)
+    filter_complex = (
+        f"[0:v]scale={W}:{H}:force_original_aspect_ratio=increase,"
+        f"crop={W}:{H},setsar=1,fps={FPS}[base];"
+        f"[base][1:v]overlay=0:0,format=yuv420p,"
+        f"fade=t=in:st=0:d=0.35,fade=t=out:st={fade_out:.2f}:d=0.35[v];"
+        f"[2:a]aresample=48000,apad[a]"
+    )
+    run([
+        FFMPEG, "-y", "-ss", f"{start:.3f}", "-t", f"{duration:.3f}", "-i", str(clip),
+        "-i", str(overlay), "-i", str(audio),
+        "-filter_complex", filter_complex,
+        "-map", "[v]", "-map", "[a]", "-t", f"{duration:.3f}",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2",
+        "-movflags", "+faststart", str(out),
+    ])
+
+
 def concat_segments(segments: list[Path], out: Path) -> None:
     list_file = BUILD / "concat.txt"
     list_file.write_text(
@@ -538,12 +585,26 @@ def build_episode(episode: dict, skip_tts: bool) -> dict:
         speech = audio_duration(audio) if audio.exists() else 0.0
         minimum = float(scene.get("duration", 4.0))
         duration = max(minimum, speech + 0.55)
-        frame = render_frame(scene, template, episode)
-        frame_path = FRAMES / f"{episode_id}_{index:02d}.png"
-        frame.save(frame_path)
         segment = BUILD / f"{episode_id}_{index:02d}.mp4"
         print(f"  scene {index + 1}/{len(scenes)}: {duration:.1f}s, audio {speech:.1f}s")
-        build_segment(frame_path, audio, duration, segment)
+        if scene.get("type") == "clip":
+            clip = INFO / "clips" / scene["file"]
+            overlay = clip_overlay(scene, episode)
+            overlay_path = FRAMES / f"{episode_id}_{index:02d}_overlay.png"
+            overlay.save(overlay_path)
+            build_clip_segment(
+                clip,
+                overlay_path,
+                audio,
+                float(scene.get("start", 0.0)),
+                duration,
+                segment,
+            )
+        else:
+            frame = render_frame(scene, template, episode)
+            frame_path = FRAMES / f"{episode_id}_{index:02d}.png"
+            frame.save(frame_path)
+            build_segment(frame_path, audio, duration, segment)
         segments.append(segment)
         total_duration += duration
 
