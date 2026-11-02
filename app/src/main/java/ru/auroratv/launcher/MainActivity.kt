@@ -27,6 +27,7 @@ import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
 import ru.auroratv.launcher.ui.MediaScreen
 import ru.auroratv.launcher.ui.SettingsScreen
+import ru.auroratv.launcher.ui.VideoScreen
 import ru.auroratv.launcher.ui.dp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -44,7 +45,7 @@ class MainActivity : Activity() {
     private lateinit var tvButton: TextView
 
     private val navItems = mutableListOf<TextView>()
-    private val screens = arrayOfNulls<LauncherScreen>(4)
+    private val screens = arrayOfNulls<LauncherScreen>(5)
     private var current = 0
     private var apps: List<AppEntry> = emptyList()
     private var loading = false
@@ -104,7 +105,7 @@ class MainActivity : Activity() {
     private fun setupHeader() {
         tvButton.setOnClickListener { openTv() }
 
-        val labels = listOf("Главная", "Приложения", "Медиа", "Настройки")
+        val labels = listOf("Главная", "Приложения", "Медиа", "Видео", "Настройки")
         labels.forEachIndexed { index, label ->
             val item = TextView(this).apply {
                 text = label
@@ -131,7 +132,8 @@ class MainActivity : Activity() {
         screens[0] = HomeScreen(this, prefs)
         screens[1] = AppsScreen(this, prefs)
         screens[2] = MediaScreen(this, prefs)
-        screens[3] = SettingsScreen(this, prefs)
+        screens[3] = VideoScreen(this, prefs)
+        screens[4] = SettingsScreen(this, prefs)
         screens.forEach { screen ->
             screen?.visibility = View.GONE
             content.addView(screen)
@@ -163,7 +165,8 @@ class MainActivity : Activity() {
     fun showHome() = showScreen(0)
     fun showApps() = showScreen(1)
     fun showMedia() = showScreen(2)
-    fun showSettings() = showScreen(3)
+    fun showVideo() = showScreen(3)
+    fun showSettings() = showScreen(4)
 
     fun focusNavigation() {
         navItems.firstOrNull()?.requestFocus()
