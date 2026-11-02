@@ -4,14 +4,13 @@ import android.app.AlertDialog
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.provider.Settings as AndroidSettings
 import android.text.format.Formatter
 import android.text.InputType
 import android.view.Gravity
+import androidx.core.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +24,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.auroratv.launcher.MainActivity
 import ru.auroratv.launcher.R
 import ru.auroratv.launcher.core.AppEntry
+import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.weather.Cities
 import ru.auroratv.launcher.weather.City
@@ -62,10 +62,10 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             gravity = Gravity.CENTER_VERTICAL
         }
         header.addView(
-            makeText("Настройки", 26f, host.getColor(R.color.text), light = true),
+            makeText("Настройки", 26f, color(R.color.text), light = true),
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
-        header.addView(makeText("Aurora TV", 11f, host.getColor(R.color.text_faint)))
+        header.addView(makeText("Aurora TV", 11f, color(R.color.text_faint)))
         root.addView(
             header,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(44))
@@ -254,7 +254,10 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             "tv" -> host.chooseTvApp()
             "wifi" -> showWifiDialog()
             "system_settings" -> openVendorSettings(AndroidSettings.ACTION_SETTINGS, VENDOR_MAIN)
-            "bluetooth" -> openVendorSettings(activity = VENDOR_BLUETOOTH)
+            "bluetooth" -> openVendorSettings(
+                AndroidSettings.ACTION_BLUETOOTH_SETTINGS,
+                VENDOR_BLUETOOTH
+            )
             "datetime" -> openVendorSettings(AndroidSettings.ACTION_DATE_SETTINGS, VENDOR_MAIN)
             "uninstall_app" -> showUninstallDialog()
             "default_home" -> showDefaultHomeDialog()
@@ -303,8 +306,8 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             hint = "Название города"
             inputType = InputType.TYPE_CLASS_TEXT
             setSingleLine()
-            setTextColor(host.getColor(R.color.text))
-            setHintTextColor(host.getColor(R.color.text_faint))
+            setTextColor(color(R.color.text))
+            setHintTextColor(color(R.color.text_faint))
         }
         val container = LinearLayout(host).apply {
             orientation = LinearLayout.VERTICAL
@@ -382,10 +385,8 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         val connected = enabled && ssid != null && (info?.networkId ?: -1) != -1
         val ip = info?.ipAddress?.takeIf { it != 0 }?.let { Formatter.formatIpAddress(it) }
 
-        val manager = host.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        val capabilities = manager?.let { it.getNetworkCapabilities(it.activeNetwork) }
-        val ethernet = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) == true
-        val online = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        val ethernet = NetworkState.isEthernet(host)
+        val online = NetworkState.isOnline(host)
 
         val status = when {
             connected && ip != null -> "Wi-Fi: $ssid, IP $ip."
@@ -433,7 +434,8 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
                 false
             }
             if (!turnedOn) {
-                host.toast("Не удалось включить Wi-Fi")
+                host.toast("Система не разрешает включить Wi-Fi напрямую — открываю настройки")
+                openVendorSettings(AndroidSettings.ACTION_WIFI_SETTINGS, VENDOR_MAIN)
                 return
             }
             host.toast("Включаю Wi-Fi…")
@@ -565,7 +567,8 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
                     "Приложения и иконки читаются локально. Доступ к файлам — только к папкам, " +
                     "которые вы выбрали вручную.\n\n" +
                     "Данные погоды: MET Norway (api.met.no) и Open-Meteo.\n\n" +
-                    "Сделано для Telefunken Android TV и совместимых устройств."
+                    "Работает на Android TV 5.0+ и совместимых устройствах. " +
+                    "Проверено на Telefunken TF-LED40S19T2S, Android 7.0."
             )
             .setPositiveButton("Закрыть", null)
             .show()
@@ -614,7 +617,10 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
                     holder.value.text = row.value
                     holder.value.visibility = if (row.value.isBlank()) View.GONE else View.VISIBLE
                     holder.value.setTextColor(
-                        host.getColor(if (row.accent) R.color.accent else R.color.text_dim)
+                        ContextCompat.getColor(
+                            host,
+                            if (row.accent) R.color.accent else R.color.text_dim
+                        )
                     )
                     holder.chevron.visibility = if (row.kind == Kind.TOGGLE) View.GONE else View.VISIBLE
                     holder.itemView.contentDescription = row.title

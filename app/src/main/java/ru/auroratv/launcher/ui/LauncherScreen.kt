@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import ru.auroratv.launcher.MainActivity
 import ru.auroratv.launcher.R
 import ru.auroratv.launcher.core.AppEntry
@@ -48,6 +49,8 @@ abstract class LauncherScreen(
 
     protected fun dp(value: Int): Int = host.dp(value)
 
+    protected fun color(id: Int): Int = ContextCompat.getColor(host, id)
+
     protected fun makeText(
         value: String,
         sizeSp: Float,
@@ -67,7 +70,7 @@ abstract class LauncherScreen(
     protected fun makeButton(label: String, onClick: () -> Unit): TextView = makeText(
         label,
         12f,
-        host.getColor(R.color.accent),
+        color(R.color.accent),
         medium = true
     ).apply {
         gravity = Gravity.CENTER
@@ -88,7 +91,7 @@ abstract class LauncherScreen(
             gravity = Gravity.CENTER_VERTICAL
         }
         row.addView(
-            makeText(title, 16f, host.getColor(R.color.text), medium = true),
+            makeText(title, 16f, color(R.color.text), medium = true),
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
         trailing?.let {

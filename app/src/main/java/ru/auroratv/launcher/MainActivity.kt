@@ -7,8 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Color
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -19,8 +17,10 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
+import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.ui.AppsScreen
 import ru.auroratv.launcher.ui.HomeScreen
@@ -178,8 +178,8 @@ class MainActivity : Activity() {
     private fun updateNavItem(index: Int, focused: Boolean) {
         val color = when {
             focused -> Color.WHITE
-            index == current -> getColor(R.color.accent)
-            else -> getColor(R.color.text_dim)
+            index == current -> ContextCompat.getColor(this, R.color.accent)
+            else -> ContextCompat.getColor(this, R.color.text_dim)
         }
         navItems.getOrNull(index)?.setTextColor(color)
     }
@@ -305,11 +305,11 @@ class MainActivity : Activity() {
     }
 
     private fun updateNetwork() {
-        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        val capabilities = manager?.getNetworkCapabilities(manager.activeNetwork)
-        val online = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        val online = NetworkState.isOnline(this)
         networkStatus.text = if (online) "● Онлайн" else "● Офлайн"
-        networkStatus.setTextColor(getColor(if (online) R.color.green else R.color.text_faint))
+        networkStatus.setTextColor(
+            ContextCompat.getColor(this, if (online) R.color.green else R.color.text_faint)
+        )
     }
 
     override fun onStart() {

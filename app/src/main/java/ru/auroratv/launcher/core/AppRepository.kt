@@ -39,11 +39,21 @@ object AppRepository {
         "com.sony.dtv.tv",
         "com.panasonic.tv",
         "com.lge.tv",
-        "com.philips.tv"
+        "com.philips.tv",
+        "com.sharp.tv",
+        "com.toshiba.tv",
+        "com.jvc.tv",
+        "com.grundig.tv",
+        "com.vestel.tv",
+        "com.changhong.tv",
+        "com.konka.tv",
+        "com.amazon.tv.livetv",
+        "com.amazon.firetv.livetv",
+        "com.nvidia.livetv"
     )
 
     private val tvLabel = Regex(
-        "телевизор|live\\s*tv|прямой\\s*эфир|digital\\s*tv",
+        "телевизор|live\\s*tv|прямой\\s*эфир|digital\\s*tv|\\bdtv\\b|\\batv\\b|каналы",
         RegexOption.IGNORE_CASE
     )
 

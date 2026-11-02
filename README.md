@@ -20,8 +20,24 @@
 ## Требования
 
 - Windows 10/11, JDK 17, Android SDK Platform 34 (для сборки).
-- Телевизор с Android TV и включённой отладкой по ADB.
+- Телевизор с **Android 5.0+** (API 21+), Android TV / Google TV / приставка.
+- Включённая отладка по ADB.
 - **Путь к проекту должен быть без кириллицы** — например, `C:\AuroraTV`. Android Gradle Plugin на Windows ломается на путях вида `C:\Users\Артем\...`.
+
+## Универсальная сборка
+
+Начиная с 1.2 Aurora не привязана к Telefunken:
+
+- Android 5.0–14, API 21–34;
+- штатные Android-интенты настроек, если вендорского пакета нет;
+- автоопределение ТВ-приложения по пакету и названию;
+- 4 колонки на узких/720p-экранах, 5 — на широких;
+- Wi-Fi через `WifiManager` на старых ТВ и через системные настройки там, где
+  Android запрещает включать Wi-Fi напрямую.
+
+Проверено на Telefunken TF-LED40S19T2S (Android 7.0). Другие модели —
+в режиме тестирования: если что-то не открывается, пришлите модель, версию
+Android и скриншот. Подробности — в [`docs/UNIVERSAL.md`](docs/UNIVERSAL.md).
 
 ## Сборка
 
@@ -137,6 +153,7 @@ app/src/main/java/ru/auroratv/launcher/
 ## Документация
 
 - [Как это работает](docs/ARCHITECTURE.md)
+- [Универсальная сборка 1.2](docs/UNIVERSAL.md)
 - [План v2 и собственный обход](ROADMAP.md)
 - [SmartTube и сетевой обход](docs/SMARTTUBE.md)
 - [Root + always-on VPN: эксперимент и ограничения](docs/ROOT-BYPASS.md)

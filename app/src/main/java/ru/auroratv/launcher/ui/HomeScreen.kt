@@ -61,11 +61,11 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
         }
 
         val left = LinearLayout(host).apply { orientation = LinearLayout.VERTICAL }
-        greeting = makeText("", 10f, host.getColor(R.color.text_dim), medium = true).apply {
+        greeting = makeText("", 10f, color(R.color.text_dim), medium = true).apply {
             letterSpacing = 0.16f
         }
-        clock = makeText("00:00", 50f, host.getColor(R.color.text), light = true)
-        date = makeText("", 14f, host.getColor(R.color.text_dim))
+        clock = makeText("00:00", 50f, color(R.color.text), light = true)
+        date = makeText("", 14f, color(R.color.text_dim))
         left.addView(greeting)
         left.addView(clock)
         left.addView(date)
@@ -79,8 +79,8 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        weatherIcon = makeText("", 24f, host.getColor(R.color.accent))
-        weatherTemp = makeText("--°", 30f, host.getColor(R.color.text), light = true)
+        weatherIcon = makeText("", 24f, color(R.color.accent))
+        weatherTemp = makeText("--°", 30f, color(R.color.text), light = true)
         weatherRow.addView(weatherIcon)
         weatherRow.addView(
             weatherTemp,
@@ -89,13 +89,13 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
                 LinearLayout.LayoutParams.WRAP_CONTENT
             ).apply { marginStart = dp(6) }
         )
-        weatherCity = makeText(prefs.cityName, 11f, host.getColor(R.color.text_dim)).apply {
+        weatherCity = makeText(prefs.cityName, 11f, color(R.color.text_dim)).apply {
             gravity = Gravity.END
             maxWidth = dp(240)
             maxLines = 1
             ellipsize = TextUtils.TruncateAt.END
         }
-        weatherLabel = makeText("", 10f, host.getColor(R.color.text_faint)).apply {
+        weatherLabel = makeText("", 10f, color(R.color.text_faint)).apply {
             gravity = Gravity.END
         }
         weatherBlock.addView(
@@ -124,7 +124,7 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
 
         val favoritesHeader = sectionHeader(
             "Избранное",
-            makeText("Удерживайте OK — закрепить", 10f, host.getColor(R.color.text_faint))
+            makeText("Удерживайте OK — закрепить", 10f, color(R.color.text_faint))
         )
         root.addView(
             favoritesHeader,
@@ -141,7 +141,7 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
         favoritesEmpty = makeText(
             "Пока пусто. Удерживайте OK на плитке приложения — и оно появится здесь.",
             12f,
-            host.getColor(R.color.text_dim)
+            color(R.color.text_dim)
         ).apply {
             gravity = Gravity.CENTER
             background = host.getDrawable(R.drawable.bg_card)
