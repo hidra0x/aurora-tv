@@ -1,6 +1,6 @@
 ﻿# Aurora TV
 
-[![Android build](https://github.com/nenasevartem70-cmyk/aurora-tv/actions/workflows/android.yml/badge.svg)](https://github.com/nenasevartem70-cmyk/aurora-tv/actions/workflows/android.yml)
+[![Android build](https://github.com/hidra0x/aurora-tv/actions/workflows/android.yml/badge.svg)](https://github.com/hidra0x/aurora-tv/actions/workflows/android.yml)
 
 Лёгкая оболочка (лончер) для **Telefunken Android TV** и совместимых устройств.
 Заменяет рабочий стол, но остаётся обычным APK: устанавливается и удаляется по ADB,
@@ -132,7 +132,7 @@ SmartTube stable запускается и доходит до экрана вх
 в [`docs/ROOT-BYPASS.md`](docs/ROOT-BYPASS.md). `/system` при эксперименте
 не менялся.
 
-Текущий APK: [GitHub Releases v1.4.0](https://github.com/nenasevartem70-cmyk/aurora-tv/releases/tag/v1.4.0) (локально — `dist\AuroraTV-1.4.apk`, SHA-256 в `dist\AuroraTV-1.4.apk.sha256`).
+Текущий APK: [GitHub Releases v1.4.0](https://github.com/hidra0x/aurora-tv/releases/tag/v1.4.0) (локально — `dist\AuroraTV-1.4.apk`, SHA-256 в `dist\AuroraTV-1.4.apk.sha256`).
 
 ## Скриншоты
 
