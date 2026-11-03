@@ -36,6 +36,7 @@ import ru.auroratv.launcher.media.PlayerActivity
 import ru.auroratv.launcher.ui.AppsScreen
 import ru.auroratv.launcher.ui.ChannelsScreen
 import ru.auroratv.launcher.ui.CinemaScreen
+import ru.auroratv.launcher.ui.GamesScreen
 import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
 import ru.auroratv.launcher.ui.MediaScreen
@@ -65,7 +66,7 @@ class MainActivity : Activity() {
     private var channelHideRunnable: Runnable? = null
 
     private val navItems = mutableListOf<TextView>()
-    private val screens = arrayOfNulls<LauncherScreen>(7)
+    private val screens = arrayOfNulls<LauncherScreen>(8)
     private var current = 0
     private var apps: List<AppEntry> = emptyList()
     private var loading = false
@@ -349,7 +350,10 @@ class MainActivity : Activity() {
     private fun setupHeader() {
         tvButton.setOnClickListener { openTv() }
 
-        val labels = listOf("Главная", "Приложения", "Медиа", "Видео", "Каналы", "Кино", "Настройки")
+        val labels = listOf(
+            "Главная", "Приложения", "Медиа", "Видео",
+            "Каналы", "Кино", "Игры", "Настройки"
+        )
         labels.forEachIndexed { index, label ->
             val item = TextView(this).apply {
                 text = label
@@ -379,7 +383,8 @@ class MainActivity : Activity() {
         screens[3] = VideoScreen(this, prefs)
         screens[4] = ChannelsScreen(this, prefs)
         screens[5] = CinemaScreen(this, prefs)
-        screens[6] = SettingsScreen(this, prefs)
+        screens[6] = GamesScreen(this, prefs)
+        screens[7] = SettingsScreen(this, prefs)
         screens.forEach { screen ->
             screen?.visibility = View.GONE
             content.addView(screen)
@@ -414,7 +419,8 @@ class MainActivity : Activity() {
     fun showVideo() = showScreen(3)
     fun showChannels() = showScreen(4)
     fun showCinema() = showScreen(5)
-    fun showSettings() = showScreen(6)
+    fun showGames() = showScreen(6)
+    fun showSettings() = showScreen(7)
 
     fun focusNavigation() {
         navItems.firstOrNull()?.requestFocus()
