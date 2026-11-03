@@ -169,6 +169,7 @@ app/src/main/java/ru/auroratv/launcher/
 - [Каналы и цифровое переключение](docs/CHANNELS.md)
 - [Кинозалы, афиша и реклама](docs/CINEMA.md)
 - [Сервер управления и профилактика](docs/CONTROL.md)
+- [Облачный гейминг: статус и план](docs/CLOUD-GAMING.md)
 - [Инфоканал и генерация видео](docs/INFO-CHANNEL.md)
 - [Универсальная сборка 1.2](docs/UNIVERSAL.md)
 - [План v2 и собственный обход](ROADMAP.md)
