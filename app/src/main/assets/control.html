@@ -208,7 +208,7 @@ function renderAll() {
 function renderChannels() {
   const container = document.getElementById("channels");
   container.innerHTML = "";
-  const channels = (data?.channels || []).filter((item) => {
+  const channels = ((data && data.channels) || []).filter((item) => {
     if (filter === "all") return true;
     if (filter === "maintenance" || filter === "upgrading") return item.state === filter;
     return item.kind === filter;
@@ -318,7 +318,7 @@ async function stopAll() {
 }
 
 function renderSchedule() {
-  const schedule = data?.schedule || {};
+  const schedule = (data && data.schedule) || {};
   const container = document.getElementById("schedule");
   container.innerHTML = "";
   if (schedule.global) {
@@ -345,7 +345,7 @@ function toggleSchedule() {
   textarea.classList.toggle("hidden", !editing);
   save.classList.toggle("hidden", !editing);
   if (editing) {
-    textarea.value = JSON.stringify(data?.schedule || {}, null, 2);
+    textarea.value = JSON.stringify((data && data.schedule) || {}, null, 2);
   }
 }
 
