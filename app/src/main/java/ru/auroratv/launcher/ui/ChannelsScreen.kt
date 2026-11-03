@@ -2,6 +2,7 @@ package ru.auroratv.launcher.ui
 
 import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.text.InputType
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -16,13 +17,14 @@ import ru.auroratv.launcher.MainActivity
 import ru.auroratv.launcher.R
 import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.Channel
+import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.ChannelsRepository
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.media.PlayerActivity
 
 class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs) {
 
-    private val adapter = ChannelAdapter(host, prefs) { channel -> play(channel) }
+    private val adapter = ChannelAdapter(host, prefs) { channel, number -> play(channel, number) }
     private val list = RecyclerView(host)
     private lateinit var countLabel: TextView
     private lateinit var emptyLabel: TextView
@@ -180,7 +182,12 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         list.visibility = if (channels.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    private fun play(channel: Channel) {
+    private fun play(channel: Channel, number: Int) {
+        val state = ChannelControl.stateFor(host, number)
+        if (!state.isLive) {
+            host.showChannelMaintenance(number, state)
+            return
+        }
         val intent = Intent(host, PlayerActivity::class.java).apply {
             putStringArrayListExtra(PlayerActivity.EXTRA_URIS, arrayListOf(channel.url))
             putStringArrayListExtra(PlayerActivity.EXTRA_TITLES, arrayListOf(channel.name))
@@ -233,7 +240,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
     private class ChannelAdapter(
         private val host: MainActivity,
         private val prefs: Prefs,
-        private val onClick: (Channel) -> Unit
+        private val onClick: (Channel, Int) -> Unit
     ) : RecyclerView.Adapter<ChannelAdapter.Holder>() {
 
         private var items: List<Channel> = emptyList()
@@ -254,10 +261,33 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
 
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val channel = items[position]
+            val number = position + 1
+            val state = ChannelControl.stateFor(host, number)
             holder.title.text = channel.name
-            holder.group.text = "${position + 1} · ${channel.group.ifBlank { "Официальный поток" }}"
+            holder.title.setTextColor(
+                if (state.isLive) {
+                    androidx.core.content.ContextCompat.getColor(host, R.color.text)
+                } else if (state.state == ChannelControl.STATE_UPGRADING) {
+                    Color.rgb(255, 209, 102)
+                } else {
+                    Color.rgb(255, 107, 107)
+                }
+            )
+            holder.group.text = buildString {
+                append("$number · ${channel.group.ifBlank { "Официальный поток" }}")
+                if (!state.isLive) {
+                    append("  ·  ")
+                    append(
+                        if (state.state == ChannelControl.STATE_UPGRADING) {
+                            "ОБНОВЛЕНИЕ"
+                        } else {
+                            "ПРОФИЛАКТИКА"
+                        }
+                    )
+                }
+            }
             holder.itemView.contentDescription = channel.name
-            holder.itemView.setOnClickListener { onClick(channel) }
+            holder.itemView.setOnClickListener { onClick(channel, number) }
         }
 
         class Holder(view: View) : RecyclerView.ViewHolder(view) {

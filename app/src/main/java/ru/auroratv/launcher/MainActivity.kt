@@ -22,10 +22,12 @@ import androidx.core.content.ContextCompat
 import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
 import ru.auroratv.launcher.core.Channel
+import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.ChannelsRepository
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.InfoRepository
+import ru.auroratv.launcher.core.ManagedChannel
 import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.media.CinemaPlayerActivity
@@ -247,7 +249,39 @@ class MainActivity : Activity() {
         channelOverlay.visibility = View.GONE
     }
 
+    fun showChannelMaintenance(number: Int, state: ManagedChannel) {
+        val title = if (state.state == ChannelControl.STATE_UPGRADING) {
+            "Обновление канала $number"
+        } else {
+            "Профилактика канала $number"
+        }
+        val message = buildString {
+            if (state.reason.isNotBlank()) append(state.reason).append("\n\n")
+            if (state.version.isNotBlank()) append("Версия: ").append(state.version).append("\n")
+            if (state.notes.isNotBlank()) append(state.notes).append("\n\n")
+            if (state.until > 0L) {
+                append("Канал вернется в эфир в ")
+                append(SimpleDateFormat("HH:mm", Locale("ru")).format(Date(state.until)))
+            } else {
+                append("Идут технические работы. Канал скоро вернется в эфир.")
+            }
+        }
+        AlertDialog.Builder(this, R.style.Theme_Aurora_Dialog)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Понятно", null)
+            .show()
+    }
+
     private fun playChannel(channel: Channel) {
+        val number = channels.indexOf(channel) + 1
+        if (number > 0) {
+            val state = ChannelControl.stateFor(this, number)
+            if (!state.isLive) {
+                showChannelMaintenance(number, state)
+                return
+            }
+        }
         val intent = Intent(this, PlayerActivity::class.java).apply {
             putStringArrayListExtra(PlayerActivity.EXTRA_URIS, arrayListOf(channel.url))
             putStringArrayListExtra(PlayerActivity.EXTRA_TITLES, arrayListOf(channel.name))

@@ -186,6 +186,13 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
 
             Row("h_system", Kind.HEADER, title = "Система"),
             Row("wifi", Kind.ACTION, title = "Wi-Fi", subtitle = "Статус, включение и переподключение"),
+            Row(
+                "control_server",
+                Kind.ACTION,
+                title = "Сервер управления",
+                subtitle = "Каналы и профилактика в браузере",
+                value = "http://${localIp()}:8765"
+            ),
             Row("system_settings", Kind.ACTION, title = "Все настройки ТВ", subtitle = "Язык, установка приложений, восстановление"),
             Row("bluetooth", Kind.ACTION, title = "Bluetooth", subtitle = "Пульты, колонки, наушники"),
             Row("datetime", Kind.ACTION, title = "Дата и время", subtitle = "Часовой пояс и формат"),
@@ -253,6 +260,7 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             "city" -> chooseCity()
             "tv" -> host.chooseTvApp()
             "wifi" -> showWifiDialog()
+            "control_server" -> showControlServerDialog()
             "system_settings" -> openVendorSettings(AndroidSettings.ACTION_SETTINGS, VENDOR_MAIN)
             "bluetooth" -> openVendorSettings(
                 AndroidSettings.ACTION_BLUETOOTH_SETTINGS,
@@ -373,6 +381,39 @@ class SettingsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
     }
 
     @Suppress("DEPRECATION")
+    private fun localIp(): String {
+        val wifi = host.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        val wifiIp = wifi?.connectionInfo?.ipAddress
+            ?.takeIf { it != 0 }
+            ?.let { Formatter.formatIpAddress(it) }
+        if (!wifiIp.isNullOrBlank()) return wifiIp
+        return try {
+            val interfaces = java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces())
+            interfaces.asSequence()
+                .flatMap { java.util.Collections.list(it.inetAddresses).asSequence() }
+                .firstOrNull { !it.isLoopbackAddress && it is java.net.Inet4Address }
+                ?.hostAddress
+                ?: "IP-ТВ"
+        } catch (_: Throwable) {
+            "IP-ТВ"
+        }
+    }
+
+    private fun showControlServerDialog() {
+        val ip = localIp()
+        AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle("Сервер управления")
+            .setMessage(
+                "Открой в браузере телефона или ПК:\n\n" +
+                    "http://$ip:8765\n\n" +
+                    "Там можно включить профилактику, запустить обновление канала " +
+                    "и посмотреть расписание. Телефон и телевизор должны быть " +
+                    "в одной Wi-Fi сети."
+            )
+            .setPositiveButton("Понятно", null)
+            .show()
+    }
+
     private fun showWifiDialogNow() {
         val wifi = host.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         val info = try {

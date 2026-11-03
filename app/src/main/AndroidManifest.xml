@@ -38,6 +38,7 @@
     </queries>
 
     <application
+        android:name=".AuroraApp"
         android:allowBackup="false"
         android:banner="@drawable/tv_banner"
         android:icon="@mipmap/ic_launcher"

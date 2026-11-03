@@ -17,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import ru.auroratv.launcher.R
+import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaFilm
 import ru.auroratv.launcher.core.CinemaRepository
@@ -37,7 +38,10 @@ class CinemaScheduleActivity : Activity() {
         val channel: CinemaChannel,
         val film: CinemaFilm,
         val startAt: Long,
-        val active: Boolean
+        val active: Boolean,
+        val state: String,
+        val until: Long,
+        val reason: String
     )
 
     private lateinit var channel: CinemaChannel
@@ -48,6 +52,7 @@ class CinemaScheduleActivity : Activity() {
     private var activeStart: Long? = null
     private var ticker: Runnable? = null
     private var selectedRow: View? = null
+    private var lastControlSignature = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,11 +160,15 @@ class CinemaScheduleActivity : Activity() {
             } catch (_: Throwable) {
                 null
             } ?: return@mapNotNull null
+            val control = ChannelControl.stateFor(this, item.number)
             LineupRow(
                 channel = item,
                 film = schedule.active?.film ?: schedule.next.film,
                 startAt = schedule.active?.startAt ?: schedule.next.startAt,
-                active = schedule.active != null
+                active = schedule.active != null,
+                state = control.state,
+                until = control.until,
+                reason = control.reason
             )
         }
 
@@ -207,6 +216,14 @@ class CinemaScheduleActivity : Activity() {
         } catch (_: Throwable) {
             Color.rgb(139, 213, 255)
         }
+        val maintenance = row.state == ChannelControl.STATE_MAINTENANCE
+        val upgrading = row.state == ChannelControl.STATE_UPGRADING
+        val blocked = maintenance || upgrading
+        val stateColor = when {
+            upgrading -> Color.rgb(255, 209, 102)
+            maintenance -> Color.rgb(255, 107, 107)
+            else -> accent
+        }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -215,11 +232,18 @@ class CinemaScheduleActivity : Activity() {
             isClickable = true
             setPadding(dp(12), dp(8), dp(12), dp(8))
             background = GradientDrawable().apply {
-                setColor(if (row.active) Color.argb(216, 16, 48, 92) else Color.argb(178, 7, 22, 44))
+                setColor(
+                    when {
+                        upgrading -> Color.argb(210, 42, 33, 12)
+                        maintenance -> Color.argb(210, 44, 16, 26)
+                        row.active -> Color.argb(216, 16, 48, 92)
+                        else -> Color.argb(178, 7, 22, 44)
+                    }
+                )
                 cornerRadius = dp(12).toFloat()
                 setStroke(
                     dp(if (selected) 2 else 1),
-                    if (selected) accent else Color.argb(55, 130, 170, 230)
+                    if (selected || blocked) stateColor else Color.argb(55, 130, 170, 230)
                 )
             }
             setOnClickListener { startPlayer(row.channel.number) }
@@ -231,7 +255,7 @@ class CinemaScheduleActivity : Activity() {
             background = GradientDrawable().apply {
                 setColor(Color.argb(120, 20, 55, 100))
                 cornerRadius = dp(9).toFloat()
-                if (row.active) setStroke(dp(1), accent)
+                if (row.active || blocked) setStroke(dp(1), stateColor)
             }
         }
         badge.addView(
@@ -259,8 +283,22 @@ class CinemaScheduleActivity : Activity() {
                 setPadding(0, 0, 0, 0)
             }
         )
-        val meta = "${row.channel.name}  •  ${row.film.year}  •  " +
-            "${row.film.durationSeconds / 60} мин  •  ${row.film.rating}"
+        val meta = buildString {
+            append("${row.channel.name}  •  ${row.film.year}  •  ")
+            append("${row.film.durationSeconds / 60} мин  •  ${row.film.rating}")
+            if (blocked) {
+                append("  •  ")
+                append(if (upgrading) "обновление" else "профилактика")
+                if (row.until > 0L) {
+                    append(" до ")
+                    append(SimpleDateFormat("HH:mm", Locale("ru")).format(Date(row.until)))
+                }
+                if (row.reason.isNotBlank()) {
+                    append("  •  ")
+                    append(row.reason)
+                }
+            }
+        }
         info.addView(
             text(meta, 10.5f, Color.rgb(170, 195, 225), false).apply {
                 maxLines = 1
@@ -278,24 +316,29 @@ class CinemaScheduleActivity : Activity() {
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
 
-        val timeText = if (row.active) {
-            "СЕЙЧАС"
-        } else {
-            SimpleDateFormat("HH:mm", Locale("ru")).format(Date(row.startAt))
+        val timeText = when {
+            upgrading -> "ОБНОВЛЕНИЕ"
+            maintenance -> "ПРОФИЛАКТИКА"
+            row.active -> "СЕЙЧАС"
+            else -> SimpleDateFormat("HH:mm", Locale("ru")).format(Date(row.startAt))
         }
         val timeView = text(
             timeText,
-            if (row.active) 10f else 11f,
-            if (row.active) accent else Color.rgb(180, 200, 230),
+            if (blocked) 8.5f else if (row.active) 10f else 11f,
+            if (blocked) stateColor else if (row.active) accent else Color.rgb(180, 200, 230),
             true
         ).apply {
             gravity = Gravity.CENTER
             background = GradientDrawable().apply {
                 setColor(Color.argb(120, 20, 55, 100))
                 cornerRadius = dp(8).toFloat()
+                if (blocked) setStroke(dp(1), stateColor)
             }
         }
-        container.addView(timeView, LinearLayout.LayoutParams(dp(70), dp(36)))
+        container.addView(
+            timeView,
+            LinearLayout.LayoutParams(if (blocked) dp(110) else dp(70), dp(36))
+        )
 
         return container
     }
@@ -311,6 +354,29 @@ class CinemaScheduleActivity : Activity() {
         val now = try {
             CinemaSchedule.now(this, channel)
         } catch (_: Throwable) {
+            return
+        }
+        val controlSignature = ChannelControl.channels(this)
+            .joinToString("|") { "${it.number}:${it.state}:${it.until}" }
+        if (lastControlSignature.isNotEmpty() && controlSignature != lastControlSignature) {
+            lastControlSignature = controlSignature
+            recreate()
+            return
+        }
+        lastControlSignature = controlSignature
+        val control = ChannelControl.stateFor(this, channel.number)
+        if (!control.isLive) {
+            val until = if (control.until > 0L) {
+                "  •  до ${formatTime(control.until)}"
+            } else {
+                ""
+            }
+            statusLabel.text = if (control.state == ChannelControl.STATE_UPGRADING) {
+                "Обновление канала$until"
+            } else {
+                "Профилактика канала$until"
+            }
+            activeStart = now.active?.startAt
             return
         }
         statusLabel.text = if (now.active != null) {

@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurora TV — управление каналами</title>
+<style>
+  :root {
+    --bg: #040a16;
+    --panel: #0a1730;
+    --panel2: #0d1f3d;
+    --line: #1d3457;
+    --text: #eaf3ff;
+    --muted: #8fa7c4;
+    --accent: #8bd5ff;
+    --green: #7ee2a8;
+    --red: #ff6b6b;
+    --yellow: #ffd166;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 800px at 80% -10%, #123a70 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    padding: 28px 34px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .brand { font-size: 28px; font-weight: 300; letter-spacing: 4px; }
+  .brand b { font-weight: 700; }
+  .sub { color: var(--muted); font-size: 13px; letter-spacing: 1px; }
+  .clock { margin-left: auto; color: var(--accent); font-size: 14px; }
+  main { padding: 22px 34px 60px; max-width: 1500px; margin: 0 auto; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+  button {
+    border: 1px solid var(--line);
+    background: var(--panel2);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: #143a68; border-color: #2f6ca8; }
+  button.danger { background: #3a1620; border-color: #7d3042; color: #ffd7de; }
+  button.success { background: #12352a; border-color: #2e7358; color: #c9ffe2; }
+  .stats { display: flex; gap: 22px; flex-wrap: wrap; margin-bottom: 18px; color: var(--muted); font-size: 14px; }
+  .stats b { color: var(--text); }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .filters button.active { background: #174b80; border-color: var(--accent); color: #fff; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .card {
+    background: linear-gradient(160deg, var(--panel2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .card.maintenance { border-color: #7d3042; }
+  .card.upgrading { border-color: #7a6428; }
+  .card.live { border-color: #245540; }
+  .card-head { display: flex; align-items: center; gap: 12px; }
+  .number {
+    width: 52px; height: 52px; border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 22px; font-weight: 700; color: var(--accent);
+    background: #102b4c; flex: 0 0 auto;
+  }
+  .name { font-size: 17px; font-weight: 600; }
+  .kind { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .badge { margin-left: auto; font-size: 12px; padding: 5px 9px; border-radius: 999px; }
+  .badge.live { background: #10362a; color: var(--green); }
+  .badge.maintenance { background: #3d1721; color: var(--red); }
+  .badge.upgrading { background: #3b3110; color: var(--yellow); }
+  .meta { color: var(--muted); font-size: 13px; line-height: 1.45; min-height: 20px; }
+  .meta b { color: var(--text); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
+  .actions button { padding: 8px 11px; font-size: 13px; }
+  .schedule {
+    margin-top: 34px;
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+  }
+  .schedule h2 { font-weight: 400; font-size: 22px; margin: 0 0 6px; }
+  .schedule p { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+  .schedule-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .slot { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 13px; }
+  .slot b { color: var(--accent); }
+  textarea {
+    width: 100%; min-height: 220px; margin-top: 12px;
+    background: #06101f; color: #dcecff; border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px; font-family: ui-monospace, Consolas, monospace;
+    font-size: 13px;
+  }
+  .hidden { display: none; }
+  .error { color: var(--red); font-size: 13px; }
+  @media (max-width: 640px) {
+    header { padding: 20px 18px 14px; }
+    main { padding: 16px 14px 50px; }
+    .brand { font-size: 22px; }
+    .clock { width: 100%; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">AURORA <b>TV</b></div>
+    <div class="sub">УПРАВЛЕНИЕ КАНАЛАМИ</div>
+  </div>
+  <div class="clock" id="clock">—</div>
+</header>
+<main>
+  <div class="toolbar">
+    <button class="danger" onclick="startAll()">Профилактика всех · 1 час</button>
+    <button class="success" onclick="stopAll()">Все в эфир</button>
+    <button onclick="load()">Обновить</button>
+    <span class="error" id="error"></span>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="filters" id="filters">
+    <button data-filter="all" class="active">Все</button>
+    <button data-filter="tv">ТВ 1–14</button>
+    <button data-filter="cinema">Кино 20–32</button>
+    <button data-filter="maintenance">Профилактика</button>
+    <button data-filter="upgrading">Обновление</button>
+  </div>
+  <div class="grid" id="channels"></div>
+
+  <section class="schedule">
+    <h2>Расписание профилактики</h2>
+    <p>Общая профилактика — ежедневно 03:00–04:00. Киноканалы обслуживаются по одному в 04:00 и 04:30. Расписание можно изменить ниже.</p>
+    <div class="schedule-grid" id="schedule"></div>
+    <div style="margin-top:12px">
+      <button onclick="toggleSchedule()">Изменить расписание</button>
+      <button id="saveSchedule" class="primary hidden" onclick="saveSchedule()">Сохранить</button>
+    </div>
+    <textarea id="scheduleJson" class="hidden" spellcheck="false"></textarea>
+  </section>
+</main>
+<script>
+const stateNames = { live: "В эфире", maintenance: "Профилактика", upgrading: "Обновление" };
+const kindNames = { tv: "ТВ", cinema: "Кино", info: "Инфо" };
+const weekdayNames = ["", "Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+let data = null;
+let filter = "all";
+let editing = false;
+
+document.getElementById("filters").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-filter]");
+  if (!button) return;
+  filter = button.dataset.filter;
+  document.querySelectorAll("#filters button").forEach((item) => item.classList.toggle("active", item === button));
+  renderChannels();
+});
+
+function formatLeft(until) {
+  if (!until) return "";
+  const left = until - Date.now();
+  if (left <= 0) return "время вышло";
+  const minutes = Math.floor(left / 60000);
+  if (minutes >= 60) return "ещё " + Math.floor(minutes / 60) + " ч " + (minutes % 60) + " мин";
+  return "ещё " + minutes + " мин";
+}
+
+function formatUntil(until) {
+  if (!until) return "без срока";
+  return new Date(until).toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+async function load() {
+  try {
+    const response = await fetch("/api/channels", { cache: "no-store" });
+    data = await response.json();
+    document.getElementById("error").textContent = "";
+    renderAll();
+  } catch (error) {
+    document.getElementById("error").textContent = "Сервер не отвечает: " + error;
+  }
+}
+
+function renderAll() {
+  const channels = data.channels || [];
+  const live = channels.filter((item) => item.state === "live").length;
+  const maintenance = channels.filter((item) => item.state === "maintenance").length;
+  const upgrading = channels.filter((item) => item.state === "upgrading").length;
+  document.getElementById("stats").innerHTML =
+    "<span>Всего: <b>" + channels.length + "</b></span>" +
+    "<span>В эфире: <b>" + live + "</b></span>" +
+    "<span>Профилактика: <b>" + maintenance + "</b></span>" +
+    "<span>Обновление: <b>" + upgrading + "</b></span>";
+  document.getElementById("clock").textContent =
+    "Сервер: " + new Date(data.serverTime).toLocaleString("ru-RU");
+  renderChannels();
+  renderSchedule();
+}
+
+function renderChannels() {
+  const container = document.getElementById("channels");
+  container.innerHTML = "";
+  const channels = (data?.channels || []).filter((item) => {
+    if (filter === "all") return true;
+    if (filter === "maintenance" || filter === "upgrading") return item.state === filter;
+    return item.kind === filter;
+  });
+  if (!channels.length) {
+    container.innerHTML = '<div class="meta">Нет каналов в этом фильтре.</div>';
+    return;
+  }
+  for (const channel of channels) {
+    const card = document.createElement("div");
+    card.className = "card " + channel.state;
+    const meta = [];
+    if (channel.state !== "live") {
+      meta.push("<b>" + stateNames[channel.state] + "</b>");
+      if (channel.reason) meta.push(channel.reason);
+      if (channel.until) meta.push("до " + formatUntil(channel.until) + " · " + formatLeft(channel.until));
+      if (channel.version) meta.push("версия " + channel.version);
+      if (channel.notes) meta.push(channel.notes);
+    } else {
+      meta.push("Канал доступен зрителям.");
+    }
+    card.innerHTML =
+      '<div class="card-head">' +
+        '<div class="number">' + channel.number + "</div>" +
+        "<div><div class=\"name\">" + escapeHtml(channel.name) + "</div>" +
+        '<div class="kind">' + kindNames[channel.kind] + "</div></div>" +
+        '<div class="badge ' + channel.state + '">' + stateNames[channel.state] + "</div>" +
+      "</div>" +
+      '<div class="meta">' + meta.join("<br>") + "</div>" +
+      '<div class="actions">' +
+        (channel.state === "live"
+          ? '<button class="danger" data-action="maintenance" data-number="' + channel.number + '">Профилактика</button>' +
+            '<button data-action="upgrade" data-number="' + channel.number + '">Обновление</button>'
+          : '<button class="success" data-action="live" data-number="' + channel.number + '">В эфир</button>' +
+            '<button data-action="maintenance" data-number="' + channel.number + '">Продлить</button>') +
+      "</div>";
+    container.appendChild(card);
+  }
+}
+
+document.getElementById("channels").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  const number = Number(button.dataset.number);
+  const action = button.dataset.action;
+  if (action === "maintenance") maintenance(number, button.textContent.includes("Продлить"));
+  if (action === "upgrade") upgrade(number);
+  if (action === "live") setState(number, { state: "live" });
+});
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[char]));
+}
+
+async function post(path, body) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  if (!response.ok) throw new Error("HTTP " + response.status);
+  data = await response.json();
+  renderAll();
+}
+
+async function setState(number, payload) {
+  try {
+    await post("/api/channels/" + number + "/state", payload);
+  } catch (error) {
+    document.getElementById("error").textContent = "Ошибка: " + error;
+  }
+}
+
+async function maintenance(number, extend) {
+  const minutes = prompt(extend ? "Продлить профилактику, минут:" : "Профилактика, минут:", "60");
+  if (minutes === null) return;
+  const reason = prompt("Причина:", "Плановые работы") || "Плановые работы";
+  await setState(number, { state: "maintenance", minutes: Number(minutes) || 60, reason });
+}
+
+async function upgrade(number) {
+  const version = prompt("Версия обновления:", "1.5.1");
+  if (version === null) return;
+  const notes = prompt("Что обновляем:", "Плановое обновление канала") || "";
+  await setState(number, { state: "upgrading", minutes: 30, reason: "Обновление канала", version, notes });
+}
+
+async function startAll() {
+  const minutes = prompt("Профилактика всех каналов, минут:", "60");
+  if (minutes === null) return;
+  try {
+    await post("/api/maintenance/start-all", { minutes: Number(minutes) || 60, reason: "Плановые работы" });
+  } catch (error) {
+    document.getElementById("error").textContent = "Ошибка: " + error;
+  }
+}
+
+async function stopAll() {
+  if (!confirm("Вернуть все каналы в эфир?")) return;
+  try {
+    await post("/api/maintenance/stop-all", {});
+  } catch (error) {
+    document.getElementById("error").textContent = "Ошибка: " + error;
+  }
+}
+
+function renderSchedule() {
+  const schedule = data?.schedule || {};
+  const container = document.getElementById("schedule");
+  container.innerHTML = "";
+  if (schedule.global) {
+    const item = document.createElement("div");
+    item.className = "slot";
+    item.innerHTML = "<b>Все каналы</b><br>Ежедневно " + schedule.global.start + "–" + schedule.global.end +
+      "<br>" + escapeHtml(schedule.global.note || "");
+    container.appendChild(item);
+  }
+  const channels = schedule.channels || [];
+  for (const slot of channels) {
+    const item = document.createElement("div");
+    item.className = "slot";
+    item.innerHTML = "<b>Кинозал " + slot.number + "</b><br>" +
+      (weekdayNames[slot.weekday] || "") + " " + slot.start + "–" + slot.end;
+    container.appendChild(item);
+  }
+}
+
+function toggleSchedule() {
+  editing = !editing;
+  const textarea = document.getElementById("scheduleJson");
+  const save = document.getElementById("saveSchedule");
+  textarea.classList.toggle("hidden", !editing);
+  save.classList.toggle("hidden", !editing);
+  if (editing) {
+    textarea.value = JSON.stringify(data?.schedule || {}, null, 2);
+  }
+}
+
+async function saveSchedule() {
+  try {
+    const schedule = JSON.parse(document.getElementById("scheduleJson").value);
+    await post("/api/schedule", { schedule });
+    editing = false;
+    document.getElementById("scheduleJson").classList.add("hidden");
+    document.getElementById("saveSchedule").classList.add("hidden");
+  } catch (error) {
+    document.getElementById("error").textContent = "Расписание: " + error;
+  }
+}
+
+load();
+setInterval(() => {
+  const active = document.activeElement;
+  if (active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) return;
+  load();
+}, 5000);
+</script>
+</body>
+</html>

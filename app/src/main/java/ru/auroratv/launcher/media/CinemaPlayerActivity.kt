@@ -27,11 +27,13 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import ru.auroratv.launcher.R
+import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaFilm
 import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.CinemaSchedule
 import ru.auroratv.launcher.core.CinemaSlot
+import ru.auroratv.launcher.core.ManagedChannel
 import ru.auroratv.launcher.ui.CinemaParticlesView
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,7 +47,7 @@ import kotlin.math.roundToInt
 @androidx.annotation.OptIn(UnstableApi::class)
 class CinemaPlayerActivity : Activity() {
 
-    private enum class Phase { WAITING, FILM, AD, CONTINUE, CREDITS, ERROR }
+    private enum class Phase { WAITING, FILM, AD, CONTINUE, CREDITS, ERROR, MAINTENANCE }
 
     private data class Placard(
         val eyebrow: String,
@@ -96,8 +98,11 @@ class CinemaPlayerActivity : Activity() {
     private val ambient by lazy { CinemaAmbient(this) }
     private var waitingRunnable: Runnable? = null
     private var adRunnable: Runnable? = null
+    private var maintenanceRunnable: Runnable? = null
     private var ticker: Runnable? = null
     private var waitingSlot: CinemaSlot? = null
+    private var currentMaintenance: ManagedChannel? = null
+    private var lastControlCheck = 0L
     private var placardToken = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -414,6 +419,13 @@ class CinemaPlayerActivity : Activity() {
 
     private fun prepareSchedule() {
         val ch = channel ?: return
+        val managed = ChannelControl.stateFor(this, ch.number)
+        if (!managed.isLive) {
+            showMaintenance(managed)
+            return
+        }
+        cancelMaintenancePolling()
+        currentMaintenance = null
         val now = try {
             CinemaSchedule.now(this, ch)
         } catch (_: Throwable) {
@@ -435,16 +447,114 @@ class CinemaPlayerActivity : Activity() {
         }
     }
 
+    private fun showMaintenance(state: ManagedChannel) {
+        val accent = if (state.state == ChannelControl.STATE_UPGRADING) {
+            Color.rgb(255, 209, 102)
+        } else {
+            Color.rgb(255, 107, 107)
+        }
+        val previous = currentMaintenance
+        val sameState = phase == Phase.MAINTENANCE &&
+            previous?.state == state.state &&
+            previous?.until == state.until
+        currentMaintenance = state
+        if (!sameState) {
+            phase = Phase.MAINTENANCE
+            stopTicker()
+            cancelWaitingCountdown()
+            cancelAdCountdown()
+            cancelShowreel()
+            stopAdPlayback()
+            player?.pause()
+            playerView.visibility = View.INVISIBLE
+            overlay.visibility = View.GONE
+            ambient.start(0.4f)
+            val meta = listOfNotNull(
+                state.reason.takeIf { it.isNotBlank() },
+                state.version.takeIf { it.isNotBlank() }
+            ).joinToString("  •  ")
+            val description = if (state.until > 0L) {
+                "Канал вернется в эфир в ${formatTime(state.until)}. " +
+                    "Следите за анонсами — сеанс начнется автоматически."
+            } else {
+                "Идут технические работы. Канал скоро вернется в эфир."
+            }
+            replacePlacard(
+                Placard(
+                    eyebrow = channelTitle(),
+                    title = if (state.state == ChannelControl.STATE_UPGRADING) {
+                        "ОБНОВЛЕНИЕ КАНАЛА"
+                    } else {
+                        "ПРОФИЛАКТИКА КАНАЛА"
+                    },
+                    meta = meta,
+                    description = description,
+                    status = "Ожидаем завершения",
+                    accent = accent
+                )
+            )
+        }
+        statusView.setTextColor(accent)
+        statusView.text = maintenanceStatus(state)
+        startMaintenancePolling()
+    }
+
+    private fun maintenanceStatus(state: ManagedChannel): String =
+        if (state.until > 0L) {
+            "До возвращения: ${formatCountdown(state.until - System.currentTimeMillis())}"
+        } else {
+            "Идут технические работы"
+        }
+
+    private fun startMaintenancePolling() {
+        cancelMaintenancePolling()
+        val runnable = object : Runnable {
+            override fun run() {
+                val ch = channel ?: return
+                if (phase != Phase.MAINTENANCE) return
+                val state = ChannelControl.stateFor(this@CinemaPlayerActivity, ch.number)
+                if (state.isLive) {
+                    prepareSchedule()
+                    return
+                }
+                if (state.state != currentMaintenance?.state || state.until != currentMaintenance?.until) {
+                    showMaintenance(state)
+                    return
+                }
+                currentMaintenance = state
+                statusView.text = maintenanceStatus(state)
+                handler.postDelayed(this, 1000L)
+            }
+        }
+        maintenanceRunnable = runnable
+        handler.postDelayed(runnable, 1000L)
+    }
+
+    private fun cancelMaintenancePolling() {
+        maintenanceRunnable?.let { handler.removeCallbacks(it) }
+        maintenanceRunnable = null
+    }
+
     private fun startFilm(film: CinemaFilm, seekMs: Long, status: String) {
         val exo = player ?: return
+        val ch = channel
+        if (ch != null) {
+            val control = ChannelControl.stateFor(this, ch.number)
+            if (!control.isLive) {
+                showMaintenance(control)
+                return
+            }
+        }
         phase = Phase.FILM
         currentFilm = film
         pendingSeekMs = seekMs
         adAtMs = adPositionMs(film)
         cancelWaitingCountdown()
         cancelAdCountdown()
+        cancelMaintenancePolling()
         cancelShowreel()
         stopAdPlayback()
+        currentMaintenance = null
         playerView.visibility = View.VISIBLE
         ambient.pause()
 
@@ -480,6 +590,8 @@ class CinemaPlayerActivity : Activity() {
         currentFilm = slot.film
         adShown = false
         showreelPage = 0
+        cancelMaintenancePolling()
+        currentMaintenance = null
         exo.pause()
         playerView.visibility = View.INVISIBLE
         ambient.start()
@@ -751,6 +863,14 @@ class CinemaPlayerActivity : Activity() {
             override fun run() {
                 val slot = waitingSlot
                 if (phase != Phase.WAITING || slot == null) return
+                val ch = channel
+                if (ch != null) {
+                    val control = ChannelControl.stateFor(this@CinemaPlayerActivity, ch.number)
+                    if (!control.isLive) {
+                        showMaintenance(control)
+                        return
+                    }
+                }
                 val left = slot.startAt - System.currentTimeMillis()
                 if (left <= 0) {
                     startFilm(slot.film, 0, "Сеанс начинается")
@@ -956,6 +1076,18 @@ class CinemaPlayerActivity : Activity() {
             override fun run() {
                 val exo = player
                 if (phase == Phase.FILM && exo != null) {
+                    val now = System.currentTimeMillis()
+                    if (now - lastControlCheck > 3000L) {
+                        lastControlCheck = now
+                        val ch = channel
+                        if (ch != null) {
+                            val state = ChannelControl.stateFor(this@CinemaPlayerActivity, ch.number)
+                            if (!state.isLive) {
+                                showMaintenance(state)
+                                return
+                            }
+                        }
+                    }
                     if (!adShown && exo.currentPosition >= adAtMs) {
                         startAdBreak()
                         return
@@ -1166,6 +1298,7 @@ class CinemaPlayerActivity : Activity() {
         stopTicker()
         cancelWaitingCountdown()
         cancelAdCountdown()
+        cancelMaintenancePolling()
         cancelPlacards()
         cancelShowreel()
         ambient.pause()
@@ -1178,6 +1311,7 @@ class CinemaPlayerActivity : Activity() {
         stopTicker()
         cancelWaitingCountdown()
         cancelAdCountdown()
+        cancelMaintenancePolling()
         cancelPlacards()
         cancelShowreel()
         ambient.release()
