@@ -1,0 +1,108 @@
+{
+  "channels": [
+    {
+      "number": 20,
+      "id": "premiere",
+      "name": "Кинопремьера",
+      "description": "Премьеры каталога: фильмы, которые давно не показывали.",
+      "color": "#FF6B6B",
+      "films": ["charade", "his-girl-friday", "meet-john-doe", "front-page", "nothing-sacred", "farewell-arms", "lost-weekend", "39-steps"]
+    },
+    {
+      "number": 21,
+      "id": "hit",
+      "name": "Кинохит",
+      "description": "Проверенная классика и фильмы, которые хочется пересматривать.",
+      "color": "#FFD166",
+      "films": ["nosferatu", "metropolis", "scarlet-street", "lost-weekend", "charade", "39-steps", "red-house", "farewell-arms"]
+    },
+    {
+      "number": 22,
+      "id": "aurora",
+      "name": "Aurora Cinema",
+      "description": "Главный кинозал Aurora: авторская подборка лучшего.",
+      "color": "#8BD5FF",
+      "films": ["sherlock-jr", "his-girl-friday", "charade", "metropolis", "detour", "meet-john-doe", "lost-weekend", "39-steps"]
+    },
+    {
+      "number": 23,
+      "id": "comedy",
+      "name": "Комедия",
+      "description": "Хороший вечер и поднятие настроения.",
+      "color": "#FFB86B",
+      "films": ["his-girl-friday", "little-shop", "nothing-sacred", "front-page", "sherlock-jr", "meet-john-doe", "charade", "house-trubnaya"]
+    },
+    {
+      "number": 24,
+      "id": "action",
+      "name": "Боевик",
+      "description": "Погони, перестрелки и крутые герои.",
+      "color": "#FF5C8A",
+      "films": ["39-steps", "lady-vanishes", "stranger", "farewell-arms", "scarlet-street", "red-house", "detour", "doa"]
+    },
+    {
+      "number": 25,
+      "id": "sci-fi",
+      "name": "Фантастика",
+      "description": "Космос, будущее, роботы и супергерои.",
+      "color": "#7C9CFF",
+      "films": ["metropolis", "plan-9", "last-man-earth", "aelita", "sherlock-jr", "movie-camera"]
+    },
+    {
+      "number": 26,
+      "id": "detective",
+      "name": "Детектив",
+      "description": "Расследования, тайны, триллеры и шпионские истории.",
+      "color": "#C4B5FD",
+      "films": ["detour", "doa", "stranger", "scarlet-street", "red-house", "amazing-mr-x", "quicksand", "39-steps"]
+    },
+    {
+      "number": 27,
+      "id": "horror",
+      "name": "Ужасы",
+      "description": "Мистика, скримеры и хорроры для любителей пощекотать нервы.",
+      "color": "#B388FF",
+      "films": ["nosferatu", "night-living-dead", "caligari", "little-shop", "plan-9", "last-man-earth", "detour", "red-house"]
+    },
+    {
+      "number": 28,
+      "id": "family",
+      "name": "Семейный",
+      "description": "Классика, комедии и приключения для просмотра с детьми.",
+      "color": "#7EE2A8",
+      "films": ["sherlock-jr", "nothing-sacred", "his-girl-friday", "front-page", "captain-marvel-1", "captain-marvel-2", "captain-marvel-3", "charade"]
+    },
+    {
+      "number": 29,
+      "id": "russian",
+      "name": "Наше кино",
+      "description": "Российские и советские фильмы.",
+      "color": "#F5C97A",
+      "films": ["potemkin", "aelita", "movie-camera", "earth", "october", "mother", "end-st-petersburg", "house-trubnaya"]
+    },
+    {
+      "number": 30,
+      "id": "legends",
+      "name": "Легенды кино",
+      "description": "Золотая классика Голливуда и мирового кинематографа.",
+      "color": "#E0E0E0",
+      "films": ["nosferatu", "metropolis", "caligari", "lost-weekend", "of-human-bondage", "scarlet-street", "farewell-arms", "charade"]
+    },
+    {
+      "number": 31,
+      "id": "night",
+      "name": "Ночной сеанс",
+      "description": "Фильмы для взрослых: нуар, триллеры и атмосферные истории.",
+      "color": "#6C7AFF",
+      "films": ["night-living-dead", "last-man-earth", "detour", "scarlet-street", "red-house", "quicksand", "plan-9", "little-shop"]
+    },
+    {
+      "number": 32,
+      "id": "series",
+      "name": "Сериалы",
+      "description": "Киносериалы, которые можно смотреть запоем.",
+      "color": "#8BD5FF",
+      "films": ["captain-marvel-1", "captain-marvel-2", "captain-marvel-3"]
+    }
+  ]
+}

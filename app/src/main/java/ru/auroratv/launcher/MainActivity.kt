@@ -23,12 +23,17 @@ import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.AppRepository
 import ru.auroratv.launcher.core.Channel
 import ru.auroratv.launcher.core.ChannelsRepository
+import ru.auroratv.launcher.core.CinemaChannel
+import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.InfoRepository
 import ru.auroratv.launcher.core.NetworkState
 import ru.auroratv.launcher.core.Prefs
+import ru.auroratv.launcher.media.CinemaPlayerActivity
+import ru.auroratv.launcher.media.CinemaScheduleActivity
 import ru.auroratv.launcher.media.PlayerActivity
 import ru.auroratv.launcher.ui.AppsScreen
 import ru.auroratv.launcher.ui.ChannelsScreen
+import ru.auroratv.launcher.ui.CinemaScreen
 import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
 import ru.auroratv.launcher.ui.MediaScreen
@@ -58,7 +63,7 @@ class MainActivity : Activity() {
     private var channelHideRunnable: Runnable? = null
 
     private val navItems = mutableListOf<TextView>()
-    private val screens = arrayOfNulls<LauncherScreen>(6)
+    private val screens = arrayOfNulls<LauncherScreen>(7)
     private var current = 0
     private var apps: List<AppEntry> = emptyList()
     private var loading = false
@@ -187,9 +192,11 @@ class MainActivity : Activity() {
         channelInput.append(digit)
         val number = channelInput.toString()
         val channel = channelFor(number)
+        val cinema = cinemaChannelFor(number)
         channelNumberView.text = number
         channelNameView.text = when {
             number == "0" -> "Инфоканал"
+            cinema != null -> cinema.name
             channel != null -> channel.name
             else -> "Нет канала"
         }
@@ -211,10 +218,13 @@ class MainActivity : Activity() {
             hideChannelInput()
             return
         }
+        val cinema = cinemaChannelFor(number)
         val channel = channelFor(number)
         hideChannelInput()
         if (number == "0") {
             showInfoChannel()
+        } else if (cinema != null) {
+            showCinemaChannel(cinema.number)
         } else if (channel == null) {
             toast("Канал $number не найден")
         } else {
@@ -226,6 +236,9 @@ class MainActivity : Activity() {
         val index = number.toIntOrNull() ?: return null
         return channels.getOrNull(index - 1)
     }
+
+    private fun cinemaChannelFor(number: String): CinemaChannel? =
+        number.toIntOrNull()?.let { CinemaRepository.channelFor(this, it) }
 
     private fun hideChannelInput() {
         channelHideRunnable?.let { handler.removeCallbacks(it) }
@@ -244,6 +257,28 @@ class MainActivity : Activity() {
             startActivity(intent)
         } catch (_: Throwable) {
             toast("Не удалось открыть канал")
+        }
+    }
+
+    fun showCinemaChannel(number: Int) {
+        val intent = Intent(this, CinemaPlayerActivity::class.java).apply {
+            putExtra(CinemaPlayerActivity.EXTRA_CHANNEL_NUMBER, number)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
+            toast("Не удалось открыть кинозал")
+        }
+    }
+
+    fun showCinemaSchedule(number: Int) {
+        val intent = Intent(this, CinemaScheduleActivity::class.java).apply {
+            putExtra(CinemaScheduleActivity.EXTRA_CHANNEL_NUMBER, number)
+        }
+        try {
+            startActivity(intent)
+        } catch (_: Throwable) {
+            toast("Не удалось открыть расписание")
         }
     }
 
@@ -275,7 +310,7 @@ class MainActivity : Activity() {
     private fun setupHeader() {
         tvButton.setOnClickListener { openTv() }
 
-        val labels = listOf("Главная", "Приложения", "Медиа", "Видео", "Каналы", "Настройки")
+        val labels = listOf("Главная", "Приложения", "Медиа", "Видео", "Каналы", "Кино", "Настройки")
         labels.forEachIndexed { index, label ->
             val item = TextView(this).apply {
                 text = label
@@ -304,7 +339,8 @@ class MainActivity : Activity() {
         screens[2] = MediaScreen(this, prefs)
         screens[3] = VideoScreen(this, prefs)
         screens[4] = ChannelsScreen(this, prefs)
-        screens[5] = SettingsScreen(this, prefs)
+        screens[5] = CinemaScreen(this, prefs)
+        screens[6] = SettingsScreen(this, prefs)
         screens.forEach { screen ->
             screen?.visibility = View.GONE
             content.addView(screen)
@@ -338,7 +374,8 @@ class MainActivity : Activity() {
     fun showMedia() = showScreen(2)
     fun showVideo() = showScreen(3)
     fun showChannels() = showScreen(4)
-    fun showSettings() = showScreen(5)
+    fun showCinema() = showScreen(5)
+    fun showSettings() = showScreen(6)
 
     fun focusNavigation() {
         navItems.firstOrNull()?.requestFocus()

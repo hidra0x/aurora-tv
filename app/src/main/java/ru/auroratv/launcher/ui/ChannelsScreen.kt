@@ -60,6 +60,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         tunerButton = action("Эфирное ТВ") { host.openTv() }
         actions.addView(tunerButton)
         actions.addView(action("Инфоканал 0") { host.showInfoChannel() })
+        actions.addView(action("Кинозалы") { host.showCinema() })
         actions.addView(action("Плейлист") { showPlaylistDialog() })
         actions.addView(action("Обновить") { refreshChannels() })
         root.addView(

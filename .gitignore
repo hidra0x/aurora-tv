@@ -14,7 +14,8 @@ dist/
 *.aab
 
 # Local test screenshots.
-screenshots/
+/screenshots/
+/test-artifacts/
 
 # Generated info-channel intermediates (final MP4s live in res/raw).
 info/audio/

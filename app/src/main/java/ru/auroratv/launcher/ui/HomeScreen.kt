@@ -223,7 +223,7 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
     }
 
     override fun hint(): String =
-        "OK — открыть    0 — инфо    1–9 — канал    MENU — настройки"
+        "OK — открыть    0 — инфо    1–14 — ТВ    20–32 — кино"
 
     private fun refreshFavorites() {
         val favorites = prefs.favorites.mapNotNull { pkg ->

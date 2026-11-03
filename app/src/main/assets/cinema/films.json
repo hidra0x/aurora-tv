@@ -1,0 +1,527 @@
+[
+  {
+    "id": "caligari",
+    "title": "Кабинет доктора Калигари",
+    "year": 1920,
+    "genres": [
+      "horror",
+      "classic"
+    ],
+    "duration": 4637,
+    "url": "https://archive.org/download/the-cabinet-of-dr.-caligari_202603/The%20Cabinet%20of%20Dr.%20Caligari.ia.mp4",
+    "page": "https://archive.org/details/the-cabinet-of-dr.-caligari_202603",
+    "identifier": "the-cabinet-of-dr.-caligari_202603",
+    "description": "Немецкий экспрессионизм: сомнамбула и убийства на ярмарке.",
+    "rating": "16+"
+  },
+  {
+    "id": "nosferatu",
+    "title": "Носферату",
+    "year": 1922,
+    "genres": [
+      "horror",
+      "classic"
+    ],
+    "duration": 5224,
+    "url": "https://archive.org/download/nosferatu.-1922/Nosferatu.1922.ia.mp4",
+    "page": "https://archive.org/details/nosferatu.-1922",
+    "identifier": "nosferatu.-1922",
+    "description": "Немое выражение ужаса: граф Орлок приносит чуму в Висборг.",
+    "rating": "16+"
+  },
+  {
+    "id": "aelita",
+    "title": "Аэлита",
+    "year": 1924,
+    "genres": [
+      "russian",
+      "sci-fi"
+    ],
+    "duration": 4838,
+    "url": "https://archive.org/download/Aelita-QueenOfMarsrussianScience-fictionFilm1924/Aelita-QueenOfMarsrussianSci-fi1924.mp4",
+    "page": "https://archive.org/details/Aelita-QueenOfMarsrussianScience-fictionFilm1924",
+    "description": "Советская фантастика о полёте на Марс и марсианской революции.",
+    "rating": "12+"
+  },
+  {
+    "id": "sherlock-jr",
+    "title": "Шерлок-младший",
+    "year": 1924,
+    "genres": [
+      "comedy",
+      "classic"
+    ],
+    "duration": 2673,
+    "url": "https://archive.org/download/sherlock.-jr.-1924.1080p/Sherlock.Jr.1924.1080p.mp4",
+    "page": "https://archive.org/details/sherlock.-jr.-1924.1080p",
+    "identifier": "sherlock.-jr.-1924.1080p",
+    "description": "Бастер Китон — киномеханик, который входит внутрь фильма.",
+    "rating": "6+"
+  },
+  {
+    "id": "potemkin",
+    "title": "Броненосец «Потёмкин»",
+    "year": 1925,
+    "genres": [
+      "russian",
+      "classic"
+    ],
+    "duration": 4297,
+    "url": "https://archive.org/download/battleship-potemkin-1925-by-sergei-m.-eisenstein/Battleship.Potemkin.1925.1080p.BluRay.x264-%5BYTS.AM%5D.mp4",
+    "page": "https://archive.org/details/battleship-potemkin-1925-by-sergei-m.-eisenstein",
+    "description": "Немое кино Эйзенштейна о восстании матросов в 1905 году.",
+    "rating": "12+"
+  },
+  {
+    "id": "mother",
+    "title": "Мать",
+    "year": 1926,
+    "genres": [
+      "russian",
+      "classic"
+    ],
+    "duration": 5235,
+    "url": "https://archive.org/download/mother-1926-by-vsevolod-pudovkin/Mother.1926.1080p.BluRay.x264.AAC-%5BYTS.MX%5D.mp4",
+    "page": "https://archive.org/details/mother-1926-by-vsevolod-pudovkin",
+    "description": "Драма Пудовкина о матери, которая встаёт на сторону революции.",
+    "rating": "12+"
+  },
+  {
+    "id": "end-st-petersburg",
+    "title": "Конец Санкт-Петербурга",
+    "year": 1927,
+    "genres": [
+      "russian",
+      "classic"
+    ],
+    "duration": 4402,
+    "url": "https://archive.org/download/the-end-of-st.-petersburg-1927-by-vsevolod-pudovkin/The.End.Of.St..Petersburg.1927.1080p.BluRay.x264.AAC-%5BYTS.MX%5D.mp4",
+    "page": "https://archive.org/details/the-end-of-st.-petersburg-1927-by-vsevolod-pudovkin",
+    "description": "Пудовкин: деревня, завод и революция.",
+    "rating": "12+"
+  },
+  {
+    "id": "metropolis",
+    "title": "Метрополис",
+    "year": 1927,
+    "genres": [
+      "sci-fi",
+      "classic"
+    ],
+    "duration": 8723,
+    "url": "https://archive.org/download/metropolis-1927-full-movie-4-k-color-remastered-2023-colorized-with-gottfried-huppertz-score/Metropolis%20%281927%29%20Full%20Movie%20_%204K%20Color%20Remastered_%202023%20Colorized%20with%20Gottfried%20Huppertz%20Score.mp4",
+    "page": "https://archive.org/details/metropolis-1927-full-movie-4-k-color-remastered-2023-colorized-with-gottfried-huppertz-score",
+    "identifier": "metropolis-1927-full-movie-4-k-color-remastered-2023-colorized-with-gottfried-huppertz-score",
+    "description": "Футуристический город, машины и восстание рабочих.",
+    "rating": "12+"
+  },
+  {
+    "id": "house-trubnaya",
+    "title": "Дом на Трубной",
+    "year": 1928,
+    "genres": [
+      "russian",
+      "comedy"
+    ],
+    "duration": 5320,
+    "url": "https://archive.org/download/dom-na-trubnoy-1928/Dom.na.Trubnoy.1928.1080p.WEB-DL.DD%2B2.0.H.264-SbR.mp4",
+    "page": "https://archive.org/details/dom-na-trubnoy-1928",
+    "description": "Советская комедия о домработнице, которая меняет жизнь дома.",
+    "rating": "12+"
+  },
+  {
+    "id": "october",
+    "title": "Октябрь",
+    "year": 1928,
+    "genres": [
+      "russian",
+      "classic"
+    ],
+    "duration": 6016,
+    "url": "https://archive.org/download/october1928/BBC.October.Ten.Days.that.Shook.the.World.720p.HDTV.x264.AAC.MVGroup.Forum.mp4",
+    "page": "https://archive.org/details/october1928",
+    "description": "Эйзенштейн о революции 1917 года.",
+    "rating": "12+"
+  },
+  {
+    "id": "movie-camera",
+    "title": "Человек с киноаппаратом",
+    "year": 1929,
+    "genres": [
+      "russian",
+      "documentary"
+    ],
+    "duration": 4009,
+    "url": "https://archive.org/download/ChelovekskinoapparatomManWithAMovieCamera/Chelovek_s_kino-apparatom_512kb.mp4",
+    "page": "https://archive.org/details/ChelovekskinoapparatomManWithAMovieCamera",
+    "description": "Экспериментальный документальный фильм Дзиги Вертова.",
+    "rating": "6+"
+  },
+  {
+    "id": "earth",
+    "title": "Земля",
+    "year": 1930,
+    "genres": [
+      "russian",
+      "classic"
+    ],
+    "duration": 4681,
+    "url": "https://archive.org/download/earth-1930/Earth%20%281930%29.ia.mp4",
+    "page": "https://archive.org/details/earth-1930",
+    "description": "Немая драма Довженко о земле, хлебе и коллективизации.",
+    "rating": "12+"
+  },
+  {
+    "id": "front-page",
+    "title": "Первая полоса",
+    "year": 1931,
+    "genres": [
+      "comedy"
+    ],
+    "duration": 6068,
+    "url": "https://archive.org/download/the-front-page-1931_202402/The%20Front%20Page%20%281931%29.ia.mp4",
+    "page": "https://archive.org/details/the-front-page-1931_202402",
+    "identifier": "the-front-page-1931_202402",
+    "description": "Газетная комедия.",
+    "rating": "12+"
+  },
+  {
+    "id": "farewell-arms",
+    "title": "Прощай, оружие!",
+    "year": 1932,
+    "genres": [
+      "drama",
+      "classic"
+    ],
+    "duration": 5343,
+    "url": "https://archive.org/download/a-farewell-to-arms-1932-by-frank-borzage/A.Farewell.To.Arms.1932.1080p.BluRay.x264-%5BYTS.LT%5D.mp4",
+    "page": "https://archive.org/details/a-farewell-to-arms-1932-by-frank-borzage",
+    "identifier": "a-farewell-to-arms-1932-by-frank-borzage",
+    "description": "Романтика на фоне Первой мировой.",
+    "rating": "12+"
+  },
+  {
+    "id": "of-human-bondage",
+    "title": "О человеческом рабстве",
+    "year": 1934,
+    "genres": [
+      "drama",
+      "classic"
+    ],
+    "duration": 4921,
+    "url": "https://archive.org/download/ohb4354351/ohb4354351.mp4",
+    "page": "https://archive.org/details/ohb4354351",
+    "identifier": "ohb4354351",
+    "description": "Драма по Сомерсету Моэму.",
+    "rating": "16+"
+  },
+  {
+    "id": "39-steps",
+    "title": "39 ступеней",
+    "year": 1935,
+    "genres": [
+      "thriller",
+      "detective"
+    ],
+    "duration": 5205,
+    "url": "https://archive.org/download/The.39.Steps.1935.ITA.ENG.960x720p.BRrip/Il.Club.Dei.39.1935.ITA-ENG.720p.BRRip.x264.mp4",
+    "page": "https://archive.org/details/The.39.Steps.1935.ITA.ENG.960x720p.BRrip",
+    "identifier": "The.39.Steps.1935.ITA.ENG.960x720p.BRrip",
+    "description": "Шпионский триллер Хичкока.",
+    "rating": "12+"
+  },
+  {
+    "id": "nothing-sacred",
+    "title": "Ничего святого",
+    "year": 1937,
+    "genres": [
+      "comedy"
+    ],
+    "duration": 4414,
+    "url": "https://archive.org/download/nothingsacred1937/Nothing%20Sacred%20%281937%29.mp4",
+    "page": "https://archive.org/details/nothingsacred1937",
+    "identifier": "nothingsacred1937",
+    "description": "Комедия о фальшивом герое.",
+    "rating": "12+"
+  },
+  {
+    "id": "lady-vanishes",
+    "title": "Леди исчезает",
+    "year": 1938,
+    "genres": [
+      "mystery",
+      "detective"
+    ],
+    "duration": 5760,
+    "url": "https://archive.org/download/turner_video_47530/47530.ia.mp4",
+    "page": "https://archive.org/details/turner_video_47530",
+    "identifier": "turner_video_47530",
+    "description": "Детектив Хичкока в поезде.",
+    "rating": "12+"
+  },
+  {
+    "id": "his-girl-friday",
+    "title": "Его девушка Пятница",
+    "year": 1940,
+    "genres": [
+      "comedy"
+    ],
+    "duration": 3956,
+    "url": "https://archive.org/download/HisGirlFriday1940_201309/His%20Girl%20Friday%20-%201940.mp4",
+    "page": "https://archive.org/details/HisGirlFriday1940_201309",
+    "identifier": "HisGirlFriday1940_201309",
+    "description": "Скорострельная газетная комедия с Кэри Грантом.",
+    "rating": "12+"
+  },
+  {
+    "id": "meet-john-doe",
+    "title": "Знакомьтесь, Джон Доу",
+    "year": 1941,
+    "genres": [
+      "drama",
+      "classic"
+    ],
+    "duration": 7376,
+    "url": "https://archive.org/download/meet-john-doe-1941_202309/Meet%20John%20Doe%20%281941%29.ia.mp4",
+    "page": "https://archive.org/details/meet-john-doe-1941_202309",
+    "identifier": "meet-john-doe-1941_202309",
+    "description": "Газетная история о человеке, ставшем символом.",
+    "rating": "12+"
+  },
+  {
+    "id": "captain-marvel-1",
+    "title": "Капитан Марвел — серия 1",
+    "year": 1941,
+    "genres": [
+      "series",
+      "adventure"
+    ],
+    "duration": 1809,
+    "url": "https://archive.org/download/the-adventures-of-captain-marvel/captainmarvel_ep01.mp4",
+    "page": "https://archive.org/details/the-adventures-of-captain-marvel",
+    "description": "Киносериал 1941 года: Билли Бэтсон и Капитан Марвел.",
+    "rating": "6+"
+  },
+  {
+    "id": "captain-marvel-2",
+    "title": "Капитан Марвел — серия 2",
+    "year": 1941,
+    "genres": [
+      "series",
+      "adventure"
+    ],
+    "duration": 993,
+    "url": "https://archive.org/download/the-adventures-of-captain-marvel/captainmarvel_ep02.mp4",
+    "page": "https://archive.org/details/the-adventures-of-captain-marvel",
+    "description": "Вторая серия киносериала о Капитане Марвеле.",
+    "rating": "6+"
+  },
+  {
+    "id": "captain-marvel-3",
+    "title": "Капитан Марвел — серия 3",
+    "year": 1941,
+    "genres": [
+      "series",
+      "adventure"
+    ],
+    "duration": 1070,
+    "url": "https://archive.org/download/the-adventures-of-captain-marvel/captainmarvel_ep03.mp4",
+    "page": "https://archive.org/details/the-adventures-of-captain-marvel",
+    "description": "Третья серия киносериала о Капитане Марвеле.",
+    "rating": "6+"
+  },
+  {
+    "id": "detour",
+    "title": "Объезд",
+    "year": 1945,
+    "genres": [
+      "noir",
+      "detective"
+    ],
+    "duration": 4020,
+    "url": "https://archive.org/download/Detour_movie/Detour.mp4",
+    "page": "https://archive.org/details/Detour_movie",
+    "identifier": "Detour_movie",
+    "description": "Нуар о случайном попутчике и цепочке неприятностей.",
+    "rating": "16+"
+  },
+  {
+    "id": "lost-weekend",
+    "title": "Потерянный уик-энд",
+    "year": 1945,
+    "genres": [
+      "drama",
+      "classic"
+    ],
+    "duration": 6045,
+    "url": "https://archive.org/download/the-lost-weekend-1945-bdrip-1080p-multisub-high-code/The%20Lost%20Weekend%201945%20BDRip%201080p%20multisub-HighCode.mp4",
+    "page": "https://archive.org/details/the-lost-weekend-1945-bdrip-1080p-multisub-high-code",
+    "identifier": "the-lost-weekend-1945-bdrip-1080p-multisub-high-code",
+    "description": "Драма об алкоголизме.",
+    "rating": "16+"
+  },
+  {
+    "id": "scarlet-street",
+    "title": "Улица греха",
+    "year": 1945,
+    "genres": [
+      "noir",
+      "detective"
+    ],
+    "duration": 6106,
+    "url": "https://archive.org/download/scarlet-street-1945-4-k-uhd-rip/Scarlet%20Street%20%281945%29%20%7Bedition-Digital%7D.mp4",
+    "page": "https://archive.org/details/scarlet-street-1945-4-k-uhd-rip",
+    "identifier": "scarlet-street-1945-4-k-uhd-rip",
+    "description": "Нуар о художнике, девушке и шантаже.",
+    "rating": "16+"
+  },
+  {
+    "id": "stranger",
+    "title": "Чужак",
+    "year": 1946,
+    "genres": [
+      "thriller",
+      "detective"
+    ],
+    "duration": 5657,
+    "url": "https://archive.org/download/1946-the-stranger-el-extrano-orson-welles-vo/1946%20-%20The%20Stranger%20-%20El%20extra%C3%B1o%20-%20Orson%20Welles%20-%20VO.ia.mp4",
+    "page": "https://archive.org/details/1946-the-stranger-el-extrano-orson-welles-vo",
+    "identifier": "1946-the-stranger-el-extrano-orson-welles-vo",
+    "description": "Орсон Уэллс — нацистский преступник в маленьком городке.",
+    "rating": "16+"
+  },
+  {
+    "id": "red-house",
+    "title": "Красный дом",
+    "year": 1947,
+    "genres": [
+      "mystery",
+      "detective"
+    ],
+    "duration": 6023,
+    "url": "https://archive.org/download/THE_RED_HOUSE/THE_RED_HOUSE.mp4",
+    "page": "https://archive.org/details/THE_RED_HOUSE",
+    "identifier": "THE_RED_HOUSE",
+    "description": "Готическая тайна старого дома.",
+    "rating": "16+"
+  },
+  {
+    "id": "amazing-mr-x",
+    "title": "Удивительный мистер Икс",
+    "year": 1948,
+    "genres": [
+      "mystery",
+      "detective"
+    ],
+    "duration": 4669,
+    "url": "https://archive.org/download/TheAmazingMr.X1948Avi/The_Amazing_Mr_X.mp4",
+    "page": "https://archive.org/details/TheAmazingMr.X1948Avi",
+    "identifier": "TheAmazingMr.X1948Avi",
+    "description": "Нуар с медиумом и обманом.",
+    "rating": "16+"
+  },
+  {
+    "id": "doa",
+    "title": "Д.О.А.",
+    "year": 1949,
+    "genres": [
+      "noir",
+      "detective"
+    ],
+    "duration": 5008,
+    "url": "https://archive.org/download/doa-1949/DOA%201950.mp4",
+    "page": "https://archive.org/details/doa-1949",
+    "identifier": "doa-1949",
+    "description": "Бухгалтер узнаёт, что отравлен, и ищет убийцу.",
+    "rating": "16+"
+  },
+  {
+    "id": "quicksand",
+    "title": "Зыбучий песок",
+    "year": 1950,
+    "genres": [
+      "noir",
+      "drama"
+    ],
+    "duration": 4745,
+    "url": "https://archive.org/download/quicksand-1950/Quicksand%20%281950%29.mp4",
+    "page": "https://archive.org/details/quicksand-1950",
+    "identifier": "quicksand-1950",
+    "description": "Молодой человек увязает в долгах и преступлении.",
+    "rating": "16+"
+  },
+  {
+    "id": "plan-9",
+    "title": "План 9 из открытого космоса",
+    "year": 1959,
+    "genres": [
+      "sci-fi",
+      "horror"
+    ],
+    "duration": 4740,
+    "url": "https://archive.org/download/turner_video_47558/47558.ia.mp4",
+    "page": "https://archive.org/details/turner_video_47558",
+    "identifier": "turner_video_47558",
+    "description": "Легендарный трэш-шедевр Эда Вуда.",
+    "rating": "16+"
+  },
+  {
+    "id": "little-shop",
+    "title": "Маленький магазинчик ужасов",
+    "year": 1960,
+    "genres": [
+      "comedy",
+      "horror"
+    ],
+    "duration": 4320,
+    "url": "https://archive.org/download/TheLittleShopOfHorrorswithSpanishSubtitles/The_Little_Shop_of_Horrors_512kb_sub.mp4",
+    "page": "https://archive.org/details/TheLittleShopOfHorrorswithSpanishSubtitles",
+    "identifier": "TheLittleShopOfHorrorswithSpanishSubtitles",
+    "description": "Мрачная комедия о цветке, который питается людьми.",
+    "rating": "16+"
+  },
+  {
+    "id": "charade",
+    "title": "Шарада",
+    "year": 1963,
+    "genres": [
+      "thriller",
+      "comedy"
+    ],
+    "duration": 6780,
+    "url": "https://archive.org/download/charade-1963-cary-grant-audrey-hepburn-walter-matthau-1080p-reup/Charade%20%281963%29%20Cary%20Grant%2C%20Audrey%20Hepburn%2C%20Walter%20Matthau%2C%20James%20Coburn%2C%20George%20Kennedy%3B%201080p%5D.ia.mp4",
+    "page": "https://archive.org/details/charade-1963-cary-grant-audrey-hepburn-walter-matthau-1080p-reup",
+    "identifier": "charade-1963-cary-grant-audrey-hepburn-walter-matthau-1080p-reup",
+    "description": "Триллер с Кэри Грантом и Одри Хепбёрн.",
+    "rating": "12+"
+  },
+  {
+    "id": "last-man-earth",
+    "title": "Последний человек на Земле",
+    "year": 1964,
+    "genres": [
+      "sci-fi",
+      "horror"
+    ],
+    "duration": 5223,
+    "url": "https://archive.org/download/the-last-man-on-earth-1964./The%20Last%20Man%20on%20Earth%201964..mp4",
+    "page": "https://archive.org/details/the-last-man-on-earth-1964.",
+    "identifier": "the-last-man-on-earth-1964.",
+    "description": "Последний человек против вампиров; по мотивам «Я — легенда».",
+    "rating": "18+"
+  },
+  {
+    "id": "night-living-dead",
+    "title": "Ночь живых мертвецов",
+    "year": 1968,
+    "genres": [
+      "horror"
+    ],
+    "duration": 5760,
+    "url": "https://archive.org/download/Night_of_the_Living_Dead_AVI/MoviePowderPresentsTheNightOfTheLivingDead.mp4",
+    "page": "https://archive.org/details/Night_of_the_Living_Dead_AVI",
+    "identifier": "Night_of_the_Living_Dead_AVI",
+    "description": "Классика зомби-хоррора: группа выживших в фермерском доме.",
+    "rating": "18+"
+  }
+]
