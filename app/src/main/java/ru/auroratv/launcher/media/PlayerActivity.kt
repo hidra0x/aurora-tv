@@ -95,6 +95,7 @@ class PlayerActivity : Activity() {
                 setMargins(dp(28), dp(22), dp(28), 0)
             }
         )
+        if (infoChannel) title.visibility = View.GONE
         scheduleTitleHide()
         if (infoChannel) setupInfoTips(root)
 
