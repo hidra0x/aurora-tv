@@ -22,6 +22,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import ru.auroratv.launcher.core.InfoRepository
+import ru.auroratv.launcher.ui.TickerView
 import kotlin.math.roundToInt
 
 @androidx.annotation.OptIn(UnstableApi::class)
@@ -34,8 +35,7 @@ class PlayerActivity : Activity() {
     private var infoChannel = false
     private var infoUris: ArrayList<String> = arrayListOf()
     private var infoTitles: ArrayList<String> = arrayListOf()
-    private var tipView: TextView? = null
-    private var hideTip: Runnable? = null
+    private var tickerView: TickerView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,46 +148,22 @@ class PlayerActivity : Activity() {
     }
 
     private fun setupInfoTips(root: FrameLayout) {
-        val tip = TextView(this).apply {
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            maxLines = 2
-            setPadding(dp(22), dp(10), dp(22), dp(10))
-            background = GradientDrawable().apply {
-                setColor(Color.argb(220, 8, 12, 18))
-                cornerRadius = dp(14).toFloat()
-            }
-            alpha = 0f
-            maxWidth = dp(900)
+        val ticker = TickerView(this).apply {
+            setText(InfoRepository.tickerText())
         }
-        tipView = tip
+        tickerView = ticker
         root.addView(
-            tip,
+            ticker,
             FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-            ).apply {
-                setMargins(dp(40), 0, dp(40), dp(100))
-            }
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                dp(56),
+                Gravity.BOTTOM
+            )
         )
     }
 
     private fun showTip() {
-        val tip = tipView ?: return
-        val tips = InfoRepository.tips()
-        if (tips.isEmpty()) return
-        tip.text = tips.random()
-        hideTip?.let { handler.removeCallbacks(it) }
-        tip.animate().cancel()
-        tip.alpha = 0f
-        tip.animate().alpha(1f).setDuration(220).start()
-        val hide = Runnable {
-            tip.animate().alpha(0f).setDuration(350).start()
-        }
-        hideTip = hide
-        handler.postDelayed(hide, 4500L)
+        tickerView?.setText(InfoRepository.tickerText())
     }
 
     private fun restartInfoPlaylist() {
@@ -226,7 +202,6 @@ class PlayerActivity : Activity() {
 
     override fun onDestroy() {
         hideTitle?.let { handler.removeCallbacks(it) }
-        hideTip?.let { handler.removeCallbacks(it) }
         player?.release()
         player = null
         super.onDestroy()

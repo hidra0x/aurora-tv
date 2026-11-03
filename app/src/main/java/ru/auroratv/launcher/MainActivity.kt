@@ -250,10 +250,10 @@ class MainActivity : Activity() {
     }
 
     fun showChannelMaintenance(number: Int, state: ManagedChannel) {
-        val title = if (state.state == ChannelControl.STATE_UPGRADING) {
-            "Обновление канала $number"
-        } else {
-            "Профилактика канала $number"
+        val title = when {
+            number == 0 -> "Инфоканал обновляется"
+            state.state == ChannelControl.STATE_UPGRADING -> "Обновление канала $number"
+            else -> "Профилактика канала $number"
         }
         val message = buildString {
             if (state.reason.isNotBlank()) append(state.reason).append("\n\n")
@@ -317,6 +317,11 @@ class MainActivity : Activity() {
     }
 
     fun showInfoChannel() {
+        val state = ChannelControl.stateFor(this, 0)
+        if (!state.isLive) {
+            showChannelMaintenance(0, state)
+            return
+        }
         val episodes = InfoRepository.episodes(this).shuffled()
         if (episodes.isEmpty()) {
             toast("Инфоканал пуст")

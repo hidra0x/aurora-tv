@@ -28,6 +28,18 @@ object InfoRepository {
         "Android 5.0+ — один APK для разных ТВ."
     )
 
+    fun tickerText(): String {
+        val parts = ArrayList<String>()
+        parts.add("AURORA TV  •  ИНФОКАНАЛ 0")
+        parts.add("Кинозалы 20–32  •  сеансы 14:00 и 18:00")
+        parts.add("Перед сеансом — афиша, плашки и логотип AURORA TV")
+        parts.add("Сервер управления — в настройках Aurora TV")
+        parts.add("Профилактика каналов — по расписанию")
+        parts.add("Фильмы — публичное достояние Archive.org")
+        parts.addAll(tips())
+        return parts.joinToString("     •     ") + "     •     "
+    }
+
     fun episodes(context: Context): List<InfoEpisode> {
         val packageName = context.packageName
         fun uri(resource: Int): String = "android.resource://$packageName/$resource"
@@ -73,6 +85,41 @@ object InfoRepository {
                 "Каналы, Home, плейлист и Universal",
                 38,
                 uri(R.raw.info_whatsnew)
+            ),
+            InfoEpisode(
+                "remote_video",
+                "Пульт Aurora TV — видео",
+                "Анимированный туториал по кнопкам пульта",
+                16,
+                uri(R.raw.ad_remote)
+            ),
+            InfoEpisode(
+                "channels_video",
+                "13 кинозалов — трейлер",
+                "Кинозалы 20–32: коротко о каждом",
+                16,
+                uri(R.raw.ad_channels)
+            ),
+            InfoEpisode(
+                "ident",
+                "Заставка AURORA TV",
+                "Логотип и кинозалы Aurora",
+                8,
+                uri(R.raw.ad_aurora)
+            ),
+            InfoEpisode(
+                "server_video",
+                "Сервер управления и профилактика",
+                "Как включить профилактику с телефона или ПК",
+                24,
+                uri(R.raw.info_server)
+            ),
+            InfoEpisode(
+                "whatsnew16_video",
+                "Что нового в 1.6",
+                "Кинозалы, афиша, реклама, сервер и бегущая строка",
+                24,
+                uri(R.raw.info_whatsnew16)
             )
         )
     }
