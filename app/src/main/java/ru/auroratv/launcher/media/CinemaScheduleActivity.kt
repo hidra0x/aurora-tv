@@ -194,7 +194,11 @@ class CinemaScheduleActivity : Activity() {
             dp(30)
         ).apply { topMargin = dp(4) })
 
-        selectedRow?.post { selectedRow?.requestFocus() }
+        scroll.postDelayed({
+            val target = selectedRow ?: return@postDelayed
+            scroll.scrollTo(0, (target.top - dp(4)).coerceAtLeast(0))
+            target.requestFocus()
+        }, 320L)
     }
 
     private fun makeRow(row: LineupRow, selected: Boolean): LinearLayout {
