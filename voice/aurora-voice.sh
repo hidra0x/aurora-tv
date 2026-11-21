@@ -112,6 +112,14 @@ handle_line() {
     TIMER)
       send_command "поставь таймер $text"
       ;;
+    RHYTHM)
+      send_command "ритм $text"
+      ;;
+    BEAT)
+      intensity="${text:-1}"
+      case "$intensity" in *[!0-9.]*) intensity=1 ;; esac
+      post_json /api/voice/beat "{\"intensity\":$intensity}"
+      ;;
     RESET)
       post_json /api/voice/reset '{}'
       ;;

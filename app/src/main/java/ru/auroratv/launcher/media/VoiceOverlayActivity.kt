@@ -19,8 +19,9 @@ import android.widget.TextView
 import ru.auroratv.launcher.core.VoiceBridge
 import ru.auroratv.launcher.core.VoicePhase
 import ru.auroratv.launcher.core.VoiceState
-import kotlin.math.abs
-import kotlin.math.max
+import kotlin.math.exp
+import kotlin.math.floor
+import kotlin.math.sin
 
 /**
  * Полноэкранный экран голосового помощника. Демон на Алисе присылает фазы
@@ -38,6 +39,7 @@ class VoiceOverlayActivity : Activity() {
     private var phase = VoicePhase.IDLE
 
     private lateinit var root: FrameLayout
+    private lateinit var glow: View
     private lateinit var card: LinearLayout
     private lateinit var badge: TextView
     private lateinit var title: TextView
@@ -111,7 +113,7 @@ class VoiceOverlayActivity : Activity() {
         }
 
         // Мягкое свечение позади карточки.
-        val glow = View(this).apply {
+        glow = View(this).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.argb(90, 60, 150, 230), Color.argb(0, 10, 20, 40))
@@ -289,8 +291,12 @@ class VoiceOverlayActivity : Activity() {
             hint.text = "Нажмите цифру 1–5 на пульте или скажите «первый», «второй»…"
         } else {
             candidates.visibility = View.GONE
-            hint.text = "Команды: «включи радио», «включи канал 5», «включи НТВ +1», " +
-                "«открой телегид», «поставь таймер на 10 минут», «что умеешь»"
+            hint.text = if (phase == VoicePhase.RADIO) {
+                "Ритм ${VoiceBridge.rhythm} BPM · скажите «быстрее», «медленнее» или «ритм 128»"
+            } else {
+                "Команды: «включи радио», «включи канал 5», «включи НТВ +1», " +
+                    "«открой телегид», «поставь таймер на 10 минут», «что умеешь»"
+            }
         }
         hint.visibility = if (state.connected ||
             phase == VoicePhase.ANSWERING || phase == VoicePhase.RADIO ||
@@ -373,29 +379,58 @@ class VoiceOverlayActivity : Activity() {
         stopPulse()
         if (equalizer?.isRunning == true) return
         equalizer?.cancel()
+        // Кадры гонит ValueAnimator, а фазы бита считаем от реального времени:
+        // так внешний /api/voice/beat может ровно выровнять удар с музыкой.
         equalizer = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1500L
+            duration = 1000L
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
-            addUpdateListener { anim ->
-                val t = anim.animatedValue as Float
-                bars.forEach { bar ->
-                    val i = bar.tag as Int
-                    val wave = abs(kotlin.math.sin(t * 8 + i * 0.63) * 0.6) +
-                        abs(kotlin.math.sin(t * 3.3 + i * 0.21) * 0.4)
-                    val height = dp(24) + (dp(210) * wave).toInt()
-                    bar.layoutParams.height = max(dp(16), height)
-                    bar.layoutParams.width = if (wave > 0.75f) dp(22) else dp(18)
-                }
-                equalizerBox.requestLayout()
-            }
+            addUpdateListener { animateEqualizer() }
             start()
         }
+    }
+
+    private fun animateEqualizer() {
+        if (bars.isEmpty()) return
+        val periodMs = 60_000f / VoiceBridge.rhythm.coerceAtLeast(40)
+        val elapsed = System.currentTimeMillis() - VoiceBridge.beatAt
+        val position = elapsed.toFloat() / periodMs
+        val beatIndex = floor(position).toInt()
+        val withinBeat = position - beatIndex
+        val bar = Math.floorMod(beatIndex, 4)
+        val accent = BEAT_ACCENTS[bar]
+        val intensity = VoiceBridge.beatLevel
+        // Резкий удар и плавное затухание до следующего.
+        val envelope = exp(-3.6f * withinBeat)
+
+        bars.forEach { view ->
+            val i = view.tag as Int
+            val band = i.toFloat() / bars.size
+            val bandAccent = when {
+                band < 0.22f -> if (bar == 0) 1f else 0.45f       // бас на первую долю
+                band < 0.62f -> if (bar == 1 || bar == 3) 0.95f else 0.5f
+                else -> if (bar % 2 == 1) 0.9f else 0.55f          // верха на «раз-два»
+            }
+            val seed = ((i * 37 + beatIndex * 17) % 13).toFloat() / 13f
+            val target = (0.35f + 0.65f * seed) * accent * bandAccent * intensity
+            val shimmer = 0.05f * (1f + sin(withinBeat * 6.28f + i * 0.5f))
+            val level = (0.1f + target * envelope + shimmer).coerceIn(0.05f, 1f)
+            view.layoutParams.height = dp(20) + (dp(230) * level).toInt()
+            view.layoutParams.width = if (level > 0.72f) dp(22) else dp(18)
+        }
+        glow.alpha = (0.2f + 0.7f * envelope * accent).coerceIn(0.15f, 1f)
+        equalizerBox.requestLayout()
     }
 
     private fun stopEqualizer() {
         equalizer?.cancel()
         equalizer = null
+        if (::glow.isInitialized) glow.alpha = 1f
+    }
+
+    companion object {
+        // 4/4: сильная доля, потом три более лёгких — «в ритм», а не хаос.
+        private val BEAT_ACCENTS = floatArrayOf(1f, 0.62f, 0.82f, 0.7f)
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()

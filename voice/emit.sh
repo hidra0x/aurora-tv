@@ -7,6 +7,8 @@
 #   emit.sh ANSWERING "Включаю канал НТВ +1"
 #   emit.sh COMMAND   "поставь таймер на 10 минут"
 #   emit.sh RADIO
+#   emit.sh RHYTHM "128"
+#   emit.sh BEAT "1"
 #   emit.sh RESET
 
 set -u
@@ -15,6 +17,6 @@ EVENT_FILE="$BASE_DIR/events.tsv"
 mkdir -p "$BASE_DIR" 2>/dev/null || true
 
 kind="${1:-}"
-[ -z "$kind" ] && { echo "usage: $0 {LISTENING|THINKING|ANSWERING|COMMAND|RADIO|TIMER|RESET} [text]"; exit 1; }
+[ -z "$kind" ] && { echo "usage: $0 {LISTENING|THINKING|ANSWERING|COMMAND|RADIO|TIMER|RHYTHM|BEAT|RESET} [text]"; exit 1; }
 shift
 printf '%s\t%s\n' "$kind" "$*" >> "$EVENT_FILE"

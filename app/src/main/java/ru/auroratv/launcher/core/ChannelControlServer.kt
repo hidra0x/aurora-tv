@@ -30,6 +30,7 @@ import java.util.concurrent.Executors
  * POST /api/voice/command         — выполнить голосовую команду
  * POST /api/voice/select          — выбрать вариант при уточнении канала
  * POST /api/voice/reset           — сбросить оверлей
+ * POST /api/voice/beat            — синхронизировать эквалайзер с ударом
  * GET  /api/voice/help            — мини-инструкция
  */
 object ChannelControlServer {
@@ -252,6 +253,11 @@ object ChannelControlServer {
                     val parsed = JSONObject(body.ifBlank { "{}" })
                     json(200, voiceJson(VoiceBridge.selectCandidate(context, parsed.optInt("index", 0))))
                 }
+                method == "POST" && path == "/api/voice/beat" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    val intensity = parsed.optDouble("intensity", 1.0).toFloat()
+                    json(200, voiceJson(VoiceBridge.beat(context, intensity)))
+                }
                 method == "POST" && path == "/api/voice/reset" -> {
                     json(200, voiceJson(VoiceBridge.reset(context)))
                 }
@@ -377,6 +383,8 @@ object ChannelControlServer {
             put("timerEndAt", state.timerEndAt)
             put("timerTotalMs", state.timerTotalMs)
             put("timerRemainingMs", state.timerRemainingMs)
+            put("rhythm", VoiceBridge.rhythm)
+            put("beatAt", VoiceBridge.beatAt)
             put("updatedAt", state.updatedAt)
             put("help", VoiceBridge.COMMAND_HELP)
         }

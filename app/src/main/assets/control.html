@@ -112,6 +112,7 @@
     padding: 14px; min-height: 76px; color: var(--text); line-height: 1.5;
   }
   .voice-view span { color: var(--muted); }
+  .muted { color: var(--muted); font-size: 13px; align-self: center; }
   #voiceCommand {
     width: 100%; margin: 12px 0 10px; padding: 12px; border-radius: 10px;
     background: #06101f; color: var(--text); border: 1px solid var(--line); font-size: 14px;
@@ -187,6 +188,14 @@
       <button onclick="voiceRun('поставь таймер на 10 минут')">Таймер 10 минут</button>
       <button onclick="voiceRun('открой телегид')">Телегид</button>
       <button onclick="voiceReset()">Сбросить оверлей</button>
+    </div>
+    <div class="toolbar" id="rhythmControls">
+      <span class="voice-pill" id="voiceRhythm">ритм: 120 BPM</span>
+      <button onclick="voiceRun('ритм 128')">Ритм 128</button>
+      <button onclick="voiceRun('быстрее')">Быстрее +10</button>
+      <button onclick="voiceRun('медленнее')">Медленнее −10</button>
+      <button onclick="voiceBeat()">Синхронизировать удар</button>
+      <span class="muted">эквалайзер пульсирует в такт 4/4</span>
     </div>
     <input id="voiceCommand" placeholder="Например: включи мне канал НТВ плюс один" value="включи мне канал НТВ плюс один">
     <div class="toolbar">
@@ -444,6 +453,8 @@ function renderVoice() {
   pillConnect.textContent = voice.connected ? "демон: подключён" : "демон: не подключён";
   pillConnect.classList.toggle("on", !!voice.connected);
   pillPhase.textContent = "фаза: " + voice.phase;
+  const pillRhythm = document.getElementById("voiceRhythm");
+  if (pillRhythm) pillRhythm.textContent = "ритм: " + (voice.rhythm || 120) + " BPM";
   const heard = voice.heard ? "<div><span>Распознано: </span>" + escapeHtml(voice.heard) + "</div>" : "";
   const answer = voice.answer ? "<div><span>Ответ: </span>" + escapeHtml(voice.answer) + "</div>" : "";
   const candidates = (voice.candidates || []).length
@@ -495,6 +506,7 @@ function voiceSendCommand() {
 }
 function voiceSelect(index) { voiceRequest("/api/voice/select", { index }); }
 function voiceReset() { voiceRequest("/api/voice/reset", {}); }
+function voiceBeat() { voiceRequest("/api/voice/beat", { intensity: 1 }); }
 
 load();
 refreshVoice();

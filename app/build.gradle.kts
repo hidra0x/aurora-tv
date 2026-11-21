@@ -22,8 +22,8 @@ android {
         applicationId = "ru.auroratv.launcher"
         minSdk = 21
         targetSdk = 34
-        versionCode = 17
-        versionName = "1.9-beta7"
+        versionCode = 18
+        versionName = "1.9-beta8"
     }
 
     signingConfigs {

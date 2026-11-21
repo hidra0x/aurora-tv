@@ -44,8 +44,47 @@ object VoiceBridge {
     private var clearRunnable: Runnable? = null
     private var timerRunnable: Runnable? = null
 
+    // Ритм эквалайзера. TV не видит сэмплы звука Алисы, поэтому полосы
+    // пульсируют в такт по BPM; внешний демон может выравнивать удары через beat().
+    private var rhythmBpm = 120
+    private var beatEpoch = System.currentTimeMillis()
+    private var beatIntensity = 1f
+
     val current: VoiceState
         @Synchronized get() = state
+
+    val rhythm: Int
+        @Synchronized get() = rhythmBpm
+
+    val beatAt: Long
+        @Synchronized get() = beatEpoch
+
+    val beatLevel: Float
+        @Synchronized get() = beatIntensity
+
+    /** Синхронизировать эквалайзер с ударом, присланным с Алисы. */
+    @Synchronized
+    fun beat(context: Context, intensity: Float = 1f): VoiceState {
+        attach(context)
+        beatEpoch = System.currentTimeMillis()
+        beatIntensity = intensity.coerceIn(0.2f, 2f)
+        return state
+    }
+
+    /** Задать темп («ритм 128») без выхода из режима радио. */
+    @Synchronized
+    fun setRhythm(context: Context, bpm: Int): VoiceState {
+        attach(context)
+        rhythmBpm = bpm.coerceIn(40, 220)
+        beatEpoch = System.currentTimeMillis()
+        if (state.phase == VoicePhase.RADIO) {
+            state = state.copy(answer = "Ритм $rhythmBpm BPM.", updatedAt = System.currentTimeMillis())
+            publish(context)
+        } else {
+            state = answer(context, "Ритм $rhythmBpm BPM.")
+        }
+        return state
+    }
 
     @Synchronized
     fun attach(context: Context) {
@@ -120,6 +159,15 @@ object VoiceBridge {
             text.matches(Regex("(?:что умеешь|какие команды|помощь|инструкция|список команд)")) ->
                 return answer(context, COMMAND_HELP)
 
+            text.contains(Regex("(?:ритм|темп)\\s*\\d+")) -> {
+                val bpm = Regex("\\d+").find(text)?.value?.toIntOrNull() ?: 120
+                return setRhythm(context, bpm)
+            }
+            text.matches(Regex("(?:быстрее|ускорь|увеличь ритм)")) ->
+                return setRhythm(context, rhythmBpm + 10)
+            text.matches(Regex("(?:медленнее|замедли|уменьши ритм)")) ->
+                return setRhythm(context, rhythmBpm - 10)
+
             text.contains(Regex("(?:выключи|останови|закрой|хватит).*радио")) ||
                 text.matches(Regex("(?:стоп|хватит|выход)")) ->
                 return answer(context, "Радио выключено.")
@@ -131,6 +179,8 @@ object VoiceBridge {
             text.contains(Regex("(?:открой|покажи).*(?:гид|программу|расписание)")) ||
                 text.matches(Regex("(?:телегид|гид|программа передач)")) -> {
                     answer(context, "Открываю телегид.")
+                    clearPendingClear()
+                    scheduleClear(context, 2_000L)
                     val intent = Intent(context, ChannelGuideActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
@@ -392,5 +442,5 @@ object VoiceBridge {
 
     const val COMMAND_HELP =
         "Команды: «включи радио», «включи канал 5», «включи НТВ +1», «открой телегид», " +
-        "«поставь таймер на 10 минут», «отмени таймер», «выключи радио», «что умеешь»."
+        "«поставь таймер на 10 минут», «отмени таймер», «ритм 128», «быстрее», «выключи радио», «что умеешь»."
 }
