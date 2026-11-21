@@ -24,6 +24,13 @@ import java.util.concurrent.Executors
  * POST /api/channels/all/state
  * GET  /api/schedule
  * POST /api/schedule
+ * GET  /api/voice/status          — состояние голосового моста
+ * POST /api/voice/connect         — подключение/отключение демона Алисы
+ * POST /api/voice/event           — фаза «слушает/думает/ответ» и тексты
+ * POST /api/voice/command         — выполнить голосовую команду
+ * POST /api/voice/select          — выбрать вариант при уточнении канала
+ * POST /api/voice/reset           — сбросить оверлей
+ * GET  /api/voice/help            — мини-инструкция
  */
 object ChannelControlServer {
 
@@ -40,6 +47,7 @@ object ChannelControlServer {
     fun start(context: Context) {
         if (thread?.isAlive == true) return
         appContext = context.applicationContext
+        VoiceBridge.attach(context)
         thread = Thread({
             try {
                 val socket = ServerSocket().apply {
@@ -209,6 +217,44 @@ object ChannelControlServer {
                     ChannelControl.setAll(context, ChannelControl.STATE_LIVE)
                     json(200, channelsJson(context))
                 }
+                method == "GET" && path == "/api/voice/status" -> {
+                    json(200, voiceJson(VoiceBridge.current))
+                }
+                method == "GET" && path == "/api/voice/state" -> {
+                    json(200, voiceJson(VoiceBridge.current))
+                }
+                method == "GET" && path == "/api/voice/help" -> {
+                    json(200, JSONObject().apply {
+                        put("ok", true)
+                        put("help", VoiceBridge.COMMAND_HELP)
+                    })
+                }
+                method == "POST" && path == "/api/voice/connect" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    val connected = parsed.optBoolean("connected", true)
+                    json(200, voiceJson(VoiceBridge.setConnected(context, connected)))
+                }
+                method == "POST" && path == "/api/voice/event" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    val phase = parsed.optString("phase", "LISTENING")
+                    val text = parsed.optString("text", parsed.optString("heard", ""))
+                    val answer = parsed.optString("answer", "")
+                    json(200, voiceJson(VoiceBridge.onEvent(context, phase, text, answer)))
+                }
+                method == "POST" && path == "/api/voice/command" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    val command = parsed.optString(
+                        "command", parsed.optString("text", "")
+                    )
+                    json(200, voiceJson(VoiceBridge.command(context, command)))
+                }
+                method == "POST" && path == "/api/voice/select" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    json(200, voiceJson(VoiceBridge.selectCandidate(context, parsed.optInt("index", 0))))
+                }
+                method == "POST" && path == "/api/voice/reset" -> {
+                    json(200, voiceJson(VoiceBridge.reset(context)))
+                }
                 method == "POST" && path.startsWith("/api/channels/") -> {
                     handleChannelAction(context, path, body)
                 }
@@ -306,6 +352,33 @@ object ChannelControlServer {
             put("port", PORT)
             put("serverTime", System.currentTimeMillis())
             put("maintenance", ChannelControl.channels(context).count { !it.isLive })
+            put("voice", JSONObject().apply {
+                put("connected", VoiceBridge.current.connected)
+                put("phase", VoiceBridge.current.phase.name)
+            })
+        }
+    }
+
+    private fun voiceJson(state: VoiceState): JSONObject {
+        val candidates = org.json.JSONArray()
+        state.candidates.forEach { channel ->
+            candidates.put(JSONObject().apply {
+                put("number", channel.number)
+                put("name", channel.name)
+            })
+        }
+        return JSONObject().apply {
+            put("ok", true)
+            put("connected", state.connected)
+            put("phase", state.phase.name)
+            put("heard", state.heard)
+            put("answer", state.answer)
+            put("candidates", candidates)
+            put("timerEndAt", state.timerEndAt)
+            put("timerTotalMs", state.timerTotalMs)
+            put("timerRemainingMs", state.timerRemainingMs)
+            put("updatedAt", state.updatedAt)
+            put("help", VoiceBridge.COMMAND_HELP)
         }
     }
 

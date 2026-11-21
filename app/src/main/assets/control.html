@@ -104,6 +104,18 @@
   }
   .hidden { display: none; }
   .error { color: var(--red); font-size: 13px; }
+  .voice-status { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .voice-pill { padding: 6px 12px; border-radius: 999px; background: #102b4c; color: var(--accent); font-size: 13px; }
+  .voice-pill.on { background: #12352a; color: var(--green); }
+  .voice-view {
+    background: #06101f; border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px; min-height: 76px; color: var(--text); line-height: 1.5;
+  }
+  .voice-view span { color: var(--muted); }
+  #voiceCommand {
+    width: 100%; margin: 12px 0 10px; padding: 12px; border-radius: 10px;
+    background: #06101f; color: var(--text); border: 1px solid var(--line); font-size: 14px;
+  }
   @media (max-width: 640px) {
     header { padding: 20px 18px 14px; }
     main { padding: 16px 14px 50px; }
@@ -158,6 +170,31 @@
       <button class="danger" onclick="startEvent()">Захват эфира · 10 минут</button>
       <button class="success" onclick="stopEvent()">Остановить и вернуть каналы</button>
     </div>
+  </section>
+
+  <section class="schedule">
+    <h2>Голосовое управление (Алиса)</h2>
+    <p>Тест оверлея без Алисы: кнопки посылают те же запросы, что и демон на рутированной станции.</p>
+    <div class="voice-status">
+      <span class="voice-pill" id="voiceConnect">демон: не подключён</span>
+      <span class="voice-pill" id="voicePhase">фаза: IDLE</span>
+      <button onclick="voiceConnect()">Подключить / показать инструкцию</button>
+      <button onclick="voiceEvent('LISTENING')">«Алиса слушает»</button>
+      <button onclick="voiceEvent('THINKING')">«Алиса думает»</button>
+      <button onclick="voiceEvent('ANSWERING')">«Алиса отвечает»</button>
+      <button class="success" onclick="voiceRun('включи радио')">Включи радио</button>
+      <button onclick="voiceRun('включи НТВ')">Включи НТВ (уточнение)</button>
+      <button onclick="voiceRun('поставь таймер на 10 минут')">Таймер 10 минут</button>
+      <button onclick="voiceRun('открой телегид')">Телегид</button>
+      <button onclick="voiceReset()">Сбросить оверлей</button>
+    </div>
+    <input id="voiceCommand" placeholder="Например: включи мне канал НТВ плюс один" value="включи мне канал НТВ плюс один">
+    <div class="toolbar">
+      <button class="primary" onclick="voiceSendCommand()">Отправить команду</button>
+      <button onclick="voiceSelect(0)">Выбрать 1-й вариант</button>
+      <button onclick="voiceSelect(1)">Выбрать 2-й вариант</button>
+    </div>
+    <div class="voice-view" id="voiceView"><span>Ожидание событий…</span></div>
   </section>
 </main>
 <script>
@@ -393,7 +430,75 @@ async function stopEvent() {
   }
 }
 
+let voice = null;
+
+function renderVoice() {
+  const pillConnect = document.getElementById("voiceConnect");
+  const pillPhase = document.getElementById("voicePhase");
+  const view = document.getElementById("voiceView");
+  if (!pillConnect || !pillPhase || !view) return;
+  if (!voice) {
+    view.innerHTML = "<span>Ожидание событий…</span>";
+    return;
+  }
+  pillConnect.textContent = voice.connected ? "демон: подключён" : "демон: не подключён";
+  pillConnect.classList.toggle("on", !!voice.connected);
+  pillPhase.textContent = "фаза: " + voice.phase;
+  const heard = voice.heard ? "<div><span>Распознано: </span>" + escapeHtml(voice.heard) + "</div>" : "";
+  const answer = voice.answer ? "<div><span>Ответ: </span>" + escapeHtml(voice.answer) + "</div>" : "";
+  const candidates = (voice.candidates || []).length
+    ? "<div><span>Варианты: </span>" + voice.candidates.map((c, i) =>
+        (i + 1) + ") " + escapeHtml(c.name)).join(" · ") + "</div>"
+    : "";
+  const timer = voice.timerRemainingMs > 0
+    ? "<div><span>Таймер: </span>" + Math.ceil(voice.timerRemainingMs / 1000) + " с</div>"
+    : "";
+  view.innerHTML = heard + answer + candidates + timer || "<span>Ожидание событий…</span>";
+}
+
+async function voiceRequest(path, body) {
+  try {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {})
+    });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    voice = await response.json();
+    renderVoice();
+  } catch (error) {
+    document.getElementById("error").textContent = "Голос: " + error;
+  }
+}
+
+async function refreshVoice() {
+  try {
+    const response = await fetch("/api/voice/status", { cache: "no-store" });
+    if (response.ok) {
+      voice = await response.json();
+      renderVoice();
+    }
+  } catch (_) { /* сервер ещё не готов */ }
+}
+
+function voiceConnect() { voiceRequest("/api/voice/connect", { connected: true }); }
+function voiceEvent(phase) {
+  voiceRequest("/api/voice/event", {
+    phase,
+    text: phase === "LISTENING" ? "включи НТВ плюс один" : "",
+    answer: phase === "ANSWERING" ? "Включаю канал НТВ +1." : ""
+  });
+}
+function voiceRun(text) { voiceRequest("/api/voice/command", { command: text }); }
+function voiceSendCommand() {
+  voiceRun(document.getElementById("voiceCommand").value);
+}
+function voiceSelect(index) { voiceRequest("/api/voice/select", { index }); }
+function voiceReset() { voiceRequest("/api/voice/reset", {}); }
+
 load();
+refreshVoice();
+setInterval(refreshVoice, 2000);
 setInterval(() => {
   const active = document.activeElement;
   if (active && (active.tagName === "TEXTAREA" || active.tagName === "INPUT")) return;

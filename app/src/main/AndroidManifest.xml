@@ -116,5 +116,14 @@
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Aurora.Player" />
+
+        <activity
+            android:name=".media.VoiceOverlayActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|smallestScreenSize|screenLayout|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.Aurora.Voice" />
     </application>
 </manifest>
