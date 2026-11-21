@@ -293,11 +293,15 @@ class MainActivity : Activity() {
     }
 
     private fun playChannel(channel: Channel) {
+        if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this)) {
+            ru.auroratv.launcher.core.MaintenanceScreen.show(this)
+            return
+        }
         val number = channels.indexOf(channel) + 1
         if (number > 0) {
             val state = ChannelControl.stateFor(this, number)
             if (!state.isLive) {
-                showChannelMaintenance(number, state)
+                ru.auroratv.launcher.core.MaintenanceScreen.show(this)
                 return
             }
         }
@@ -323,6 +327,10 @@ class MainActivity : Activity() {
     }
 
     fun showCinemaChannel(number: Int) {
+        if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this)) {
+            ru.auroratv.launcher.core.MaintenanceScreen.show(this)
+            return
+        }
         val intent = Intent(this, CinemaPlayerActivity::class.java).apply {
             putExtra(CinemaPlayerActivity.EXTRA_CHANNEL_NUMBER, number)
         }
@@ -345,9 +353,13 @@ class MainActivity : Activity() {
     }
 
     fun showInfoChannel() {
+        if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this)) {
+            ru.auroratv.launcher.core.MaintenanceScreen.show(this)
+            return
+        }
         val state = ChannelControl.stateFor(this, 0)
         if (!state.isLive) {
-            showChannelMaintenance(0, state)
+            ru.auroratv.launcher.core.MaintenanceScreen.show(this)
             return
         }
         val episodes = InfoRepository.episodes(this).shuffled()

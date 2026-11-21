@@ -894,6 +894,22 @@ class KidsChannelActivity : Activity() {
             if (wasPlaying) player?.play()
             if (mode == Mode.CARTOON) startSubtitleTicker()
         }
+        startMaintenanceWatch()
+    }
+
+    private val maintenanceWatch = object : Runnable {
+        override fun run() {
+            if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this@KidsChannelActivity)) {
+                ru.auroratv.launcher.core.MaintenanceScreen.show(this@KidsChannelActivity)
+                return
+            }
+            handler.postDelayed(this, 1500L)
+        }
+    }
+
+    private fun startMaintenanceWatch() {
+        handler.removeCallbacks(maintenanceWatch)
+        handler.postDelayed(maintenanceWatch, 1000L)
     }
 
     override fun onStop() {

@@ -78,6 +78,30 @@ Invoke-RestMethod -Uri http://192.168.0.3:8765/api/maintenance/stop-all `
   -Method Post -ContentType 'application/json' -Body '{}'
 ```
 
+### Родной экран профилактики (beta9)
+
+`/api/maintenance/start-all` теперь не только переводит каналы в техработы,
+но и поднимает поверх всех плееров полноэкранный «родной» экран: цветная
+телевизионная таблица, писк, живые часы и бегущая строка «Технические работы».
+Это работает и для «Совёнка» 15–18, и для инфоканала 0, и для кинозалов.
+
+```powershell
+# Включить экран на час (по умолчанию)
+Invoke-RestMethod -Uri http://192.168.0.8:8765/api/maintenance/screen/start `
+  -Method Post -ContentType 'application/json' `
+  -Body '{"minutes":60,"reason":"Технические работы"}'
+
+# Состояние экрана
+curl http://192.168.0.8:8765/api/maintenance/screen
+
+# Убрать экран и вернуть все каналы в эфир
+Invoke-RestMethod -Uri http://192.168.0.8:8765/api/maintenance/screen/stop `
+  -Method Post -ContentType 'application/json' -Body '{}'
+```
+
+Если нужно перевести каналы в профилактику **без** показа экрана, передайте
+`"screen": false` в `/api/maintenance/start-all`.
+
 ### Расписание
 
 ```powershell

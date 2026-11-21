@@ -140,6 +140,15 @@
     <button onclick="load()">Обновить</button>
     <span class="error" id="error"></span>
   </div>
+  <section class="schedule" style="margin-top:12px">
+    <h2>Родной экран профилактики</h2>
+    <p>Цветная таблица, писк, часы и бегущая строка «Технические работы» поверх ВСЕХ каналов, включая «Совёнок».</p>
+    <div class="toolbar">
+      <button class="danger" onclick="startMaintenanceScreen()">Показать таблицу · 1 час</button>
+      <button class="success" onclick="stopMaintenanceScreen()">Убрать и вернуть в эфир</button>
+      <span id="maintenanceScreenInfo">Экран: выключен</span>
+    </div>
+  </section>
   <div class="stats" id="stats"></div>
   <div class="filters" id="filters">
     <button data-filter="all" class="active">Все</button>
@@ -259,6 +268,14 @@ function renderAll() {
     "<span>Обновление: <b>" + upgrading + "</b></span>";
   document.getElementById("clock").textContent =
     "Сервер: " + new Date(data.serverTime).toLocaleString("ru-RU");
+  const screen = data.maintenanceScreen;
+  const screenInfo = document.getElementById("maintenanceScreenInfo");
+  if (screenInfo) {
+    screenInfo.textContent = screen && screen.active
+      ? "Экран: ВКЛЮЧЁН" + (screen.until ? " · до " + new Date(screen.until).toLocaleTimeString("ru-RU") : "")
+      : "Экран: выключен";
+    screenInfo.style.color = screen && screen.active ? "#ff6b6b" : "#7ee2a8";
+  }
   renderChannels();
   renderSchedule();
 }
@@ -370,6 +387,29 @@ async function stopAll() {
   if (!confirm("Вернуть все каналы в эфир?")) return;
   try {
     await post("/api/maintenance/stop-all", {});
+  } catch (error) {
+    document.getElementById("error").textContent = "Ошибка: " + error;
+  }
+}
+
+async function startMaintenanceScreen() {
+  const minutes = prompt("Показывать цветную таблицу, минут:", "60");
+  if (minutes === null) return;
+  const reason = prompt("Причина:", "Технические работы") || "Технические работы";
+  try {
+    await post("/api/maintenance/screen/start", {
+      minutes: Number(minutes) || 60,
+      reason
+    });
+  } catch (error) {
+    document.getElementById("error").textContent = "Ошибка: " + error;
+  }
+}
+
+async function stopMaintenanceScreen() {
+  if (!confirm("Убрать экран и вернуть все каналы в эфир?")) return;
+  try {
+    await post("/api/maintenance/screen/stop", {});
   } catch (error) {
     document.getElementById("error").textContent = "Ошибка: " + error;
   }

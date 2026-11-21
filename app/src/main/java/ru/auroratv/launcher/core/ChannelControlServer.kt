@@ -22,6 +22,11 @@ import java.util.concurrent.Executors
  * POST /api/channels/{n}/maintenance
  * POST /api/channels/{n}/state
  * POST /api/channels/all/state
+ * POST /api/maintenance/start-all      — техработы + «родной» экран на всех каналах
+ * POST /api/maintenance/stop-all       — вернуть все каналы в эфир
+ * GET  /api/maintenance/screen         — состояние экрана профилактики
+ * POST /api/maintenance/screen/start   — показать цветную таблицу
+ * POST /api/maintenance/screen/stop    — скрыть цветную таблицу
  * GET  /api/schedule
  * POST /api/schedule
  * GET  /api/voice/status          — состояние голосового моста
@@ -206,17 +211,48 @@ object ChannelControlServer {
                 }
                 method == "POST" && path == "/api/maintenance/start-all" -> {
                     val parsed = JSONObject(body.ifBlank { "{}" })
-                    ChannelControl.setAll(
+                    val until = resolveUntil(parsed)
+                    val reason = parsed.optString("reason", "Плановые работы")
+                    ChannelControl.setAll(context, ChannelControl.STATE_MAINTENANCE, reason, until)
+                    ChannelControl.setState(context, 0, ChannelControl.STATE_MAINTENANCE, reason, until)
+                    MaintenanceScreen.start(
                         context,
-                        ChannelControl.STATE_MAINTENANCE,
-                        parsed.optString("reason", "Плановые работы"),
-                        resolveUntil(parsed)
+                        until,
+                        reason,
+                        showOverlay = parsed.optBoolean("screen", true)
                     )
-                    json(200, channelsJson(context))
+                    json(200, maintenanceJson(context))
                 }
                 method == "POST" && path == "/api/maintenance/stop-all" -> {
                     ChannelControl.setAll(context, ChannelControl.STATE_LIVE)
-                    json(200, channelsJson(context))
+                    ChannelControl.setState(context, 0, ChannelControl.STATE_LIVE)
+                    MaintenanceScreen.stop(context)
+                    json(200, maintenanceJson(context))
+                }
+                method == "GET" && path == "/api/maintenance/screen" -> {
+                    val screen = MaintenanceScreen.current(context)
+                    json(200, JSONObject().apply {
+                        put("ok", true)
+                        put("active", MaintenanceScreen.isActive(context))
+                        put("startedAt", screen.startedAt)
+                        put("until", screen.until)
+                        put("reason", screen.reason)
+                    })
+                }
+                method == "POST" && path == "/api/maintenance/screen/start" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    val until = resolveUntil(parsed)
+                    val reason = parsed.optString("reason", "Технические работы")
+                    ChannelControl.setAll(context, ChannelControl.STATE_MAINTENANCE, reason, until)
+                    ChannelControl.setState(context, 0, ChannelControl.STATE_MAINTENANCE, reason, until)
+                    MaintenanceScreen.start(context, until, reason)
+                    json(200, maintenanceJson(context))
+                }
+                method == "POST" && path == "/api/maintenance/screen/stop" -> {
+                    ChannelControl.setAll(context, ChannelControl.STATE_LIVE)
+                    ChannelControl.setState(context, 0, ChannelControl.STATE_LIVE)
+                    MaintenanceScreen.stop(context)
+                    json(200, maintenanceJson(context))
                 }
                 method == "GET" && path == "/api/voice/status" -> {
                     json(200, voiceJson(VoiceBridge.current))
@@ -387,6 +423,38 @@ object ChannelControlServer {
             put("beatAt", VoiceBridge.beatAt)
             put("updatedAt", state.updatedAt)
             put("help", VoiceBridge.COMMAND_HELP)
+        }
+    }
+
+    private fun maintenanceJson(context: Context): JSONObject {
+        val screen = MaintenanceScreen.current(context)
+        return JSONObject().apply {
+            put("ok", true)
+            put("serverTime", System.currentTimeMillis())
+            put("channels", org.json.JSONArray().let { array ->
+                ChannelControl.channels(context).forEach { channel ->
+                    array.put(JSONObject().apply {
+                        put("number", channel.number)
+                        put("name", channel.name)
+                        put("kind", channel.kind)
+                        put("state", channel.state)
+                        put("reason", channel.reason)
+                        put("until", channel.until)
+                        put("version", channel.version)
+                        put("notes", channel.notes)
+                        put("updatedAt", channel.updatedAt)
+                    })
+                }
+                array
+            })
+            put("schedule", ChannelControl.schedule(context))
+            put("event", eventJson(context))
+            put("maintenanceScreen", JSONObject().apply {
+                put("active", MaintenanceScreen.isActive(context))
+                put("startedAt", screen.startedAt)
+                put("until", screen.until)
+                put("reason", screen.reason)
+            })
         }
     }
 

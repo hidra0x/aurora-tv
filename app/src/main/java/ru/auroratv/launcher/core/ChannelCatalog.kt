@@ -93,10 +93,15 @@ object ChannelCatalog {
     }
 
     fun open(context: Context, channel: GuideChannel): Boolean {
+        // Глобальный родной экран профилактики имеет приоритет над любым каналом.
+        if (MaintenanceScreen.isActive(context)) {
+            MaintenanceScreen.show(context)
+            return true
+        }
         val state = ChannelControl.stateFor(context, channel.number)
         if (!state.isLive && channel.kind != "kids" && channel.kind != "cinema") {
-            Toast.makeText(context, "Канал на профилактике", Toast.LENGTH_SHORT).show()
-            return false
+            MaintenanceScreen.show(context)
+            return true
         }
         val intent = when (channel.kind) {
             "info" -> {

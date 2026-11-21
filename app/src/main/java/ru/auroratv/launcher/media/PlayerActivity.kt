@@ -232,6 +232,22 @@ class PlayerActivity : Activity() {
     override fun onStart() {
         super.onStart()
         if (wasPlaying) player?.play()
+        startMaintenanceWatch()
+    }
+
+    private val maintenanceWatch = object : Runnable {
+        override fun run() {
+            if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this@PlayerActivity)) {
+                ru.auroratv.launcher.core.MaintenanceScreen.show(this@PlayerActivity)
+                return
+            }
+            handler.postDelayed(this, 1500L)
+        }
+    }
+
+    private fun startMaintenanceWatch() {
+        handler.removeCallbacks(maintenanceWatch)
+        handler.postDelayed(maintenanceWatch, 1000L)
     }
 
     override fun onStop() {
@@ -241,6 +257,7 @@ class PlayerActivity : Activity() {
     }
 
     override fun onDestroy() {
+        handler.removeCallbacks(maintenanceWatch)
         hideTitle?.let { handler.removeCallbacks(it) }
         osdRunnable?.let { handler.removeCallbacks(it) }
         player?.release()

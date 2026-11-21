@@ -1292,6 +1292,7 @@ class CinemaPlayerActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        startMaintenanceWatch()
         when (phase) {
             Phase.FILM -> {
                 player?.play()
@@ -1331,7 +1332,23 @@ class CinemaPlayerActivity : Activity() {
         super.onStop()
     }
 
+    private val maintenanceWatch = object : Runnable {
+        override fun run() {
+            if (ru.auroratv.launcher.core.MaintenanceScreen.isActive(this@CinemaPlayerActivity)) {
+                ru.auroratv.launcher.core.MaintenanceScreen.show(this@CinemaPlayerActivity)
+                return
+            }
+            handler.postDelayed(this, 1500L)
+        }
+    }
+
+    private fun startMaintenanceWatch() {
+        handler.removeCallbacks(maintenanceWatch)
+        handler.postDelayed(maintenanceWatch, 1000L)
+    }
+
     override fun onDestroy() {
+        handler.removeCallbacks(maintenanceWatch)
         channelSwitchRunnable?.let { handler.removeCallbacks(it) }
         stopTicker()
         cancelWaitingCountdown()
