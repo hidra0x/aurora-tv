@@ -73,23 +73,30 @@ object CinemaRepository {
             films[film.id] = film
         }
 
+        val newYear = NewYearEvent.isActive(context)
         val channels = ArrayList<CinemaChannel>()
         val channelArray = JSONObject(channelsJson).getJSONArray("channels")
         for (index in 0 until channelArray.length()) {
             val item = channelArray.getJSONObject(index)
+            val number = item.getInt("number")
+            if (!newYear && number == 33) continue
+            val id = item.getString("id")
             val ids = item.optJSONArray("films")?.let { array ->
                 (0 until array.length()).map { array.optString(it) }
                     .filter { films.containsKey(it) }
             } ?: emptyList()
             if (ids.isEmpty()) continue
+            val rawName = item.optString("name", id)
+            val rawDescription = item.optString("description", "")
+            val rawColor = item.optString("color", "#8BD5FF")
             channels.add(
                 CinemaChannel(
-                    number = item.getInt("number"),
-                    id = item.getString("id"),
-                    name = item.optString("name", item.getString("id")),
-                    description = item.optString("description", ""),
+                    number = number,
+                    id = id,
+                    name = if (newYear) NewYearEvent.cinemaName(id) ?: rawName else rawName,
+                    description = if (newYear) NewYearEvent.cinemaDescription(id) ?: rawDescription else rawDescription,
                     filmIds = ids,
-                    color = item.optString("color", "#8BD5FF")
+                    color = if (newYear) NewYearEvent.cinemaColor(id) ?: rawColor else rawColor
                 )
             )
         }

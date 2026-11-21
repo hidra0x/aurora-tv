@@ -1,6 +1,7 @@
 package ru.auroratv.launcher.media
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -21,6 +22,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import ru.auroratv.launcher.core.ChannelCatalog
+import ru.auroratv.launcher.core.ChannelsRepository
 import ru.auroratv.launcher.core.InfoRepository
 import ru.auroratv.launcher.ui.TickerView
 import kotlin.math.roundToInt
@@ -36,6 +39,12 @@ class PlayerActivity : Activity() {
     private var infoUris: ArrayList<String> = arrayListOf()
     private var infoTitles: ArrayList<String> = arrayListOf()
     private var tickerView: TickerView? = null
+    private var channelNumber = -1
+    private var currentChannelName = ""
+    private var wasPlaying = false
+    private lateinit var channelOsd: TextView
+    private val channelInput = StringBuilder()
+    private var osdRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +59,8 @@ class PlayerActivity : Activity() {
         infoChannel = intent.getBooleanExtra(EXTRA_INFO_CHANNEL, false)
         infoUris = ArrayList(uriStrings)
         infoTitles = ArrayList(titles ?: emptyList())
+        channelNumber = intent.getIntExtra(EXTRA_CHANNEL, if (infoChannel) 0 else -1)
+        currentChannelName = titles?.getOrNull(start).orEmpty()
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         hideSystemUi()
@@ -99,6 +110,26 @@ class PlayerActivity : Activity() {
         scheduleTitleHide()
         if (infoChannel) setupInfoTips(root)
 
+        channelOsd = TextView(this).apply {
+            textSize = 36f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            setPadding(dp(30), dp(18), dp(30), dp(18))
+            background = GradientDrawable().apply {
+                setColor(Color.argb(225, 0, 0, 0))
+                cornerRadius = dp(18).toFloat()
+            }
+            visibility = View.GONE
+        }
+        root.addView(
+            channelOsd,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            )
+        )
+
         val exoPlayer = ExoPlayer.Builder(this).build()
         player = exoPlayer
         playerView.player = exoPlayer
@@ -124,6 +155,8 @@ class PlayerActivity : Activity() {
                 val index = exoPlayer.currentMediaItemIndex
                 title.text = if (infoChannel) {
                     infoTitles.getOrNull(index).orEmpty()
+                } else if (currentChannelName.isNotBlank()) {
+                    currentChannelName
                 } else {
                     titles?.getOrNull(index)
                         ?: mediaItem?.mediaMetadata?.title
@@ -196,22 +229,48 @@ class PlayerActivity : Activity() {
         showTip()
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (wasPlaying) player?.play()
+    }
+
     override fun onStop() {
+        wasPlaying = player?.isPlaying == true
         player?.pause()
         super.onStop()
     }
 
     override fun onDestroy() {
         hideTitle?.let { handler.removeCallbacks(it) }
+        osdRunnable?.let { handler.removeCallbacks(it) }
         player?.release()
         player = null
         super.onDestroy()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        digitFor(keyCode)?.let {
+            handleDigit(it)
+            return true
+        }
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
                 finish()
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_UP,
+            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                switchRelative(1)
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_DOWN,
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                switchRelative(-1)
+                return true
+            }
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_GUIDE -> {
+                openGuide()
                 return true
             }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
@@ -229,6 +288,90 @@ class PlayerActivity : Activity() {
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun digitFor(keyCode: Int): Int? = when (keyCode) {
+        in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> keyCode - KeyEvent.KEYCODE_0
+        in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9 -> keyCode - KeyEvent.KEYCODE_NUMPAD_0
+        else -> null
+    }
+
+    private fun handleDigit(digit: Int) {
+        if (channelInput.length >= 2) channelInput.clear()
+        channelInput.append(digit)
+        val number = channelInput.toString().toIntOrNull() ?: return
+        val target = ChannelCatalog.byNumber(this, number)
+        showChannelOsd("$number  ${target?.name ?: "канал не найден"}")
+        osdRunnable?.let { handler.removeCallbacks(it) }
+        val switch = Runnable {
+            channelInput.clear()
+            target?.let { switchTo(it) }
+        }
+        osdRunnable = switch
+        handler.postDelayed(switch, 2500L)
+    }
+
+    private fun switchRelative(delta: Int) {
+        val target = ChannelCatalog.next(this, channelNumber, delta) ?: return
+        switchTo(target)
+    }
+
+    private fun switchTo(target: ru.auroratv.launcher.core.GuideChannel) {
+        if (target.kind == "tv") {
+            if (target.state != "live") {
+                showChannelOsd("${target.number}  профилактика")
+                return
+            }
+            val tv = ChannelsRepository.bundled(this).getOrNull(target.number - 1) ?: return
+            val current = player ?: return
+            infoChannel = false
+            tickerView?.visibility = View.GONE
+            titleView?.visibility = View.VISIBLE
+            channelNumber = target.number
+            currentChannelName = tv.name
+            titleView?.text = tv.name
+            titleView?.alpha = 1f
+            current.setMediaItem(MediaItem.fromUri(Uri.parse(tv.url)))
+            current.prepare()
+            current.playWhenReady = true
+            showChannelOsd("${target.number}  ${tv.name}")
+        } else if (ChannelCatalog.open(this, target)) {
+            finish()
+        }
+    }
+
+    private fun openGuide() {
+        startActivityForResult(
+            Intent(this, ChannelGuideActivity::class.java)
+                .putExtra(ChannelGuideActivity.EXTRA_CURRENT, channelNumber)
+                .putExtra(ChannelGuideActivity.EXTRA_FROM_PLAYER, true),
+            ChannelGuideActivity.REQUEST_GUIDE
+        )
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ChannelGuideActivity.REQUEST_GUIDE && resultCode == RESULT_OK) {
+            val number = data?.getIntExtra(ChannelGuideActivity.EXTRA_SELECTED, -1) ?: -1
+            val target = ChannelCatalog.byNumber(this, number) ?: return
+            switchTo(target)
+        }
+    }
+
+    private fun showChannelOsd(text: String) {
+        if (!::channelOsd.isInitialized) return
+        channelOsd.text = text
+        channelOsd.visibility = View.VISIBLE
+        channelOsd.alpha = 0f
+        channelOsd.animate().alpha(1f).setDuration(140L).start()
+        osdRunnable?.let { handler.removeCallbacks(it) }
+        val hide = Runnable {
+            channelOsd.animate().alpha(0f).setDuration(250L).withEndAction {
+                channelOsd.visibility = View.GONE
+            }.start()
+        }
+        osdRunnable = hide
+        handler.postDelayed(hide, 2800L)
     }
 
     private fun scheduleTitleHide() {
@@ -261,5 +404,6 @@ class PlayerActivity : Activity() {
         const val EXTRA_START = "start"
         const val EXTRA_LOOP = "loop"
         const val EXTRA_INFO_CHANNEL = "info_channel"
+        const val EXTRA_CHANNEL = "channel_number"
     }
 }

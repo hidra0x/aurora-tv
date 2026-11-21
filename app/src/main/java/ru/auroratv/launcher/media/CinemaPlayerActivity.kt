@@ -1,6 +1,7 @@
 package ru.auroratv.launcher.media
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -18,6 +19,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -27,13 +29,16 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import ru.auroratv.launcher.R
+import ru.auroratv.launcher.core.ChannelCatalog
 import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaFilm
 import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.CinemaSchedule
 import ru.auroratv.launcher.core.CinemaSlot
+import ru.auroratv.launcher.core.GuideChannel
 import ru.auroratv.launcher.core.ManagedChannel
+import ru.auroratv.launcher.core.NewYearEvent
 import ru.auroratv.launcher.ui.CinemaParticlesView
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,6 +65,9 @@ class CinemaPlayerActivity : Activity() {
 
     private var player: ExoPlayer? = null
     private var channel: CinemaChannel? = null
+    private var channelNumber = -1
+    private val channelInput = StringBuilder()
+    private var channelSwitchRunnable: Runnable? = null
     private var currentFilm: CinemaFilm? = null
     private var phase = Phase.WAITING
     private var adShown = false
@@ -114,6 +122,7 @@ class CinemaPlayerActivity : Activity() {
             return
         }
         channel = selected
+        channelNumber = selected.number
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         hideSystemUi()
@@ -265,7 +274,11 @@ class CinemaPlayerActivity : Activity() {
             )
         )
         showreelHeader = label(13f, Color.rgb(190, 210, 240), true).apply {
-            text = "СКОРО НА ЭКРАНЕ"
+            text = if (NewYearEvent.isActive(this@CinemaPlayerActivity)) {
+                "НОВОГОДНИЙ СЕАНС"
+            } else {
+                "СКОРО НА ЭКРАНЕ"
+            }
             letterSpacing = 0.08f
         }
         reelContent.addView(
@@ -335,7 +348,7 @@ class CinemaPlayerActivity : Activity() {
         )
         logoBox.addView(
             label(15f, Color.rgb(180, 200, 230), false).apply {
-                text = "КИНОЗАЛЫ 20–32  •  ПУБЛИЧНОЕ ДОСТОЯНИЕ"
+                text = "КИНОЗАЛЫ 20–43  •  ПУБЛИЧНОЕ ДОСТОЯНИЕ"
             }
         )
 
@@ -610,9 +623,16 @@ class CinemaPlayerActivity : Activity() {
         logoBox.visibility = View.GONE
         lineupGrid.visibility = View.VISIBLE
         showreelHeader.visibility = View.VISIBLE
-        showreelHeader.text = "СКОРО НА ЭКРАНЕ  •  ${channelTitle()}"
+        val newYear = NewYearEvent.isActive(this)
+        showreelHeader.text = if (newYear) {
+            "НОВОГОДНИЙ СЕАНС  •  ${channelTitle()}"
+        } else {
+            "СКОРО НА ЭКРАНЕ  •  ${channelTitle()}"
+        }
         val startAt = waitingSlot?.startAt
-        showreelFooter.text = if (startAt != null) {
+        showreelFooter.text = if (newYear) {
+            "СКОРО ЗИМА  •  МАНДАРИНЫ  •  ШАМПУСЁНОК"
+        } else if (startAt != null) {
             "Сеанс начнется в ${formatTime(startAt)}"
         } else {
             "Сеанс начнется автоматически"
@@ -919,11 +939,15 @@ class CinemaPlayerActivity : Activity() {
         adTimer.text = "До продолжения: ${formatCountdown(AD_BREAK_MS)}"
     }
 
-    private fun adMediaItems(): List<MediaItem> = listOf(
-        R.raw.ad_remote,
-        R.raw.ad_channels,
-        R.raw.ad_aurora
-    ).map { MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(it)) }
+    private fun adMediaItems(): List<MediaItem> {
+        val ads = mutableListOf(
+            R.raw.ad_remote,
+            R.raw.ad_channels,
+            R.raw.ad_aurora
+        )
+        if (NewYearEvent.isActive(this)) ads.add(R.raw.ad_newyear)
+        return ads.map { MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(it)) }
+    }
 
     private fun startAdPlayback(restart: Boolean) {
         val ad = adPlayer ?: ExoPlayer.Builder(this).build().also {
@@ -1308,6 +1332,7 @@ class CinemaPlayerActivity : Activity() {
     }
 
     override fun onDestroy() {
+        channelSwitchRunnable?.let { handler.removeCallbacks(it) }
         stopTicker()
         cancelWaitingCountdown()
         cancelAdCountdown()
@@ -1323,9 +1348,28 @@ class CinemaPlayerActivity : Activity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        digitFor(keyCode)?.let {
+            handleChannelDigit(it)
+            return true
+        }
         when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
                 finish()
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_UP,
+            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                switchRelative(1)
+                return true
+            }
+            KeyEvent.KEYCODE_CHANNEL_DOWN,
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                switchRelative(-1)
+                return true
+            }
+            KeyEvent.KEYCODE_MENU,
+            KeyEvent.KEYCODE_GUIDE -> {
+                openGuide()
                 return true
             }
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> {
@@ -1337,6 +1381,63 @@ class CinemaPlayerActivity : Activity() {
             }
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private fun digitFor(keyCode: Int): Int? = when (keyCode) {
+        in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> keyCode - KeyEvent.KEYCODE_0
+        in KeyEvent.KEYCODE_NUMPAD_0..KeyEvent.KEYCODE_NUMPAD_9 -> keyCode - KeyEvent.KEYCODE_NUMPAD_0
+        else -> null
+    }
+
+    private fun handleChannelDigit(digit: Int) {
+        if (channelInput.length >= 2) channelInput.clear()
+        channelInput.append(digit)
+        val number = channelInput.toString().toIntOrNull() ?: return
+        val target = ChannelCatalog.byNumber(this, number)
+        Toast.makeText(this, "$number  ${target?.name ?: "канал не найден"}", Toast.LENGTH_SHORT).show()
+        channelSwitchRunnable?.let { handler.removeCallbacks(it) }
+        val switch = Runnable {
+            channelInput.clear()
+            target?.let { switchTo(it) }
+        }
+        channelSwitchRunnable = switch
+        handler.postDelayed(switch, 2200L)
+    }
+
+    private fun switchRelative(delta: Int) {
+        val target = ChannelCatalog.next(this, channelNumber, delta) ?: return
+        switchTo(target)
+    }
+
+    private fun switchTo(target: GuideChannel) {
+        if (target.number == channelNumber) return
+        if (target.kind == "cinema") {
+            startActivity(
+                Intent(this, CinemaPlayerActivity::class.java)
+                    .putExtra(EXTRA_CHANNEL_NUMBER, target.number)
+            )
+            finish()
+            return
+        }
+        if (ChannelCatalog.open(this, target)) finish()
+    }
+
+    private fun openGuide() {
+        startActivityForResult(
+            Intent(this, ChannelGuideActivity::class.java)
+                .putExtra(ChannelGuideActivity.EXTRA_CURRENT, channelNumber)
+                .putExtra(ChannelGuideActivity.EXTRA_FROM_PLAYER, true),
+            ChannelGuideActivity.REQUEST_GUIDE
+        )
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ChannelGuideActivity.REQUEST_GUIDE && resultCode == RESULT_OK) {
+            val number = data?.getIntExtra(ChannelGuideActivity.EXTRA_SELECTED, -1) ?: -1
+            val target = ChannelCatalog.byNumber(this, number) ?: return
+            switchTo(target)
+        }
     }
 
     private fun label(size: Float, color: Int, medium: Boolean): TextView =

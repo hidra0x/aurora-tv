@@ -523,5 +523,85 @@
     "identifier": "Night_of_the_Living_Dead_AVI",
     "description": "Классика зомби-хоррора: группа выживших в фермерском доме.",
     "rating": "18+"
+  },
+  {
+    "id": "christmas-carol-1935",
+    "title": "Рождественская песнь",
+    "year": 1935,
+    "genres": [
+      "christmas",
+      "family",
+      "classic"
+    ],
+    "duration": 3608,
+    "url": "https://archive.org/download/a-christmas-carol-1935/A%20Christmas%20Carol%201935.mp4",
+    "page": "https://archive.org/details/a-christmas-carol-1935",
+    "identifier": "a-christmas-carol-1935",
+    "description": "Экранизация повести Чарльза Диккенса о скупом Скрудже, которому предстоит измениться в рождественскую ночь.",
+    "rating": "0+"
+  },
+  {
+    "id": "christmas-carol-1910",
+    "title": "Рождественская песнь (1910)",
+    "year": 1910,
+    "genres": [
+      "christmas",
+      "silent",
+      "classic"
+    ],
+    "duration": 631,
+    "url": "https://archive.org/download/silent-a-christmas-carol/A%20Christmas%20Carol.mp4",
+    "page": "https://archive.org/details/silent-a-christmas-carol",
+    "identifier": "silent-a-christmas-carol",
+    "description": "Ранняя немая экранизация рождественской повести Диккенса.",
+    "rating": "0+"
+  },
+  {
+    "id": "christmas-comes-1936",
+    "title": "Рождество бывает раз в году",
+    "year": 1936,
+    "genres": [
+      "christmas",
+      "cartoon",
+      "family"
+    ],
+    "duration": 498,
+    "url": "https://archive.org/download/christmas-comes-but-once-a-year-1936-color-classic-cartoon/Christmas%20Comes%20But%20Once%20a%20Year%20%281936%29%20Color%20Classic%20Cartoon.mp4",
+    "page": "https://archive.org/details/christmas-comes-but-once-a-year-1936-color-classic-cartoon",
+    "identifier": "christmas-comes-but-once-a-year-1936-color-classic-cartoon",
+    "description": "Цветной рождественский мультфильм 1936 года о добром празднике и подарках.",
+    "rating": "0+"
+  },
+  {
+    "id": "trap-santa-1909",
+    "title": "Ловушка для Санта-Клауса",
+    "year": 1909,
+    "genres": [
+      "christmas",
+      "silent",
+      "classic"
+    ],
+    "duration": 913,
+    "url": "https://archive.org/download/a-trap-for-santa-claus-1909/A_Trap_for_Santa_Claus_%281909%29_.mp4",
+    "page": "https://archive.org/details/a-trap-for-santa-claus-1909",
+    "identifier": "a-trap-for-santa-claus-1909",
+    "description": "Рождественская история 1909 года: дети ждут Санта-Клауса.",
+    "rating": "0+"
+  },
+  {
+    "id": "scrooge-1935",
+    "title": "Скрудж",
+    "year": 1935,
+    "genres": [
+      "christmas",
+      "drama",
+      "classic"
+    ],
+    "duration": 4655,
+    "url": "https://archive.org/download/Scrooge_855/ScroogePresentedByMoviePowder_512kb.mp4",
+    "page": "https://archive.org/details/Scrooge_855",
+    "identifier": "Scrooge_855",
+    "description": "Классическая рождественская история о Скрудже, public domain.",
+    "rating": "6+"
   }
 ]

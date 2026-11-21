@@ -131,7 +131,8 @@
   <div class="filters" id="filters">
     <button data-filter="all" class="active">Все</button>
     <button data-filter="tv">ТВ 1–14</button>
-    <button data-filter="cinema">Кино 20–32</button>
+    <button data-filter="kids">Совёнок 15–18</button>
+    <button data-filter="cinema">Кино 20–43</button>
     <button data-filter="maintenance">Профилактика</button>
     <button data-filter="upgrading">Обновление</button>
   </div>
@@ -147,10 +148,21 @@
     </div>
     <textarea id="scheduleJson" class="hidden" spellcheck="false"></textarea>
   </section>
+
+  <section class="schedule">
+    <h2>Спецэфир</h2>
+    <p>Художественная постановка Aurora TV: плашки «Свободу Артёму», обратный отсчёт,
+      голос диктора, сообщение «Я жив» и технические работы на всех каналах.
+      Это не реальное экстренное оповещение.</p>
+    <div class="toolbar">
+      <button class="danger" onclick="startEvent()">Захват эфира · 10 минут</button>
+      <button class="success" onclick="stopEvent()">Остановить и вернуть каналы</button>
+    </div>
+  </section>
 </main>
 <script>
 const stateNames = { live: "В эфире", maintenance: "Профилактика", upgrading: "Обновление" };
-const kindNames = { tv: "ТВ", cinema: "Кино", info: "Инфо" };
+const kindNames = { tv: "ТВ", cinema: "Кино", info: "Инфо", kids: "Совёнок" };
 const weekdayNames = ["", "Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 let data = null;
 let filter = "all";
@@ -358,6 +370,26 @@ async function saveSchedule() {
     document.getElementById("saveSchedule").classList.add("hidden");
   } catch (error) {
     document.getElementById("error").textContent = "Расписание: " + error;
+  }
+}
+
+async function startEvent() {
+  const minutes = prompt("Длительность спецэфира, минут:", "10");
+  if (minutes === null) return;
+  if (!confirm("Запустить художественный захват эфира? Это постановка, не реальное ЧП.")) return;
+  try {
+    await post("/api/event/start", { minutes: Number(minutes) || 10 });
+  } catch (error) {
+    document.getElementById("error").textContent = "Спецэфир: " + error;
+  }
+}
+
+async function stopEvent() {
+  if (!confirm("Остановить спецэфир и вернуть все каналы в эфир?")) return;
+  try {
+    await post("/api/event/stop", { restore: true });
+  } catch (error) {
+    document.getElementById("error").textContent = "Спецэфир: " + error;
   }
 }
 

@@ -1,5 +1,7 @@
 package ru.auroratv.launcher.ui
 
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
@@ -13,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import ru.auroratv.launcher.MainActivity
 import ru.auroratv.launcher.R
 import ru.auroratv.launcher.core.AppEntry
+import ru.auroratv.launcher.core.NewYearEvent
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.weather.Weather
 import ru.auroratv.launcher.weather.WeatherRepository
@@ -54,6 +57,31 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
             setPadding(dp(40), dp(4), dp(40), dp(4))
         }
         addView(root, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+
+        if (NewYearEvent.isActive(host)) {
+            val banner = makeText(
+                "❄   СКОРО ЗИМА   •   МАНДАРИНЫ   •   ШАМПУСЁНОК   ❄",
+                11f,
+                Color.rgb(255, 226, 150),
+                medium = true
+            ).apply {
+                gravity = Gravity.CENTER
+                letterSpacing = 0.14f
+                setPadding(dp(18), 0, dp(18), 0)
+                background = GradientDrawable().apply {
+                    setColor(Color.argb(190, 92, 26, 34))
+                    cornerRadius = dp(12).toFloat()
+                    setStroke(dp(1), Color.argb(190, 255, 209, 102))
+                }
+            }
+            root.addView(
+                banner,
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    dp(28)
+                ).apply { bottomMargin = dp(5) }
+            )
+        }
 
         val info = LinearLayout(host).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -223,7 +251,7 @@ class HomeScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, prefs)
     }
 
     override fun hint(): String =
-        "OK — открыть    0 — инфо    1–14 — ТВ    20–32 — кино"
+        "OK — открыть    0 — инфо    1–14 — ТВ    15–18 — дети    20–43 — кино    GUIDE — телегид"
 
     private fun refreshFavorites() {
         val favorites = prefs.favorites.mapNotNull { pkg ->

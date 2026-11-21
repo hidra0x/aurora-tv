@@ -19,6 +19,7 @@ import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.Channel
 import ru.auroratv.launcher.core.ChannelControl
 import ru.auroratv.launcher.core.ChannelsRepository
+import ru.auroratv.launcher.core.KidsRepository
 import ru.auroratv.launcher.core.Prefs
 import ru.auroratv.launcher.media.PlayerActivity
 
@@ -62,7 +63,9 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         tunerButton = action("Эфирное ТВ") { host.openTv() }
         actions.addView(tunerButton)
         actions.addView(action("Инфоканал 0") { host.showInfoChannel() })
+        actions.addView(action("Детские 15–18") { showKidsDialog() })
         actions.addView(action("Кинозалы") { host.showCinema() })
+        actions.addView(action("Телегид") { host.openGuide() })
         actions.addView(action("Плейлист") { showPlaylistDialog() })
         actions.addView(action("Обновить") { refreshChannels() })
         root.addView(
@@ -142,7 +145,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
     }
 
     override fun hint(): String =
-        "OK — смотреть    0 — инфоканал    MENU — настройки"
+        "OK — смотреть    0 — инфоканал    GUIDE — телегид    MENU — настройки"
 
     private fun action(label: String, onClick: () -> Unit): TextView =
         makeButton(label, onClick).apply {
@@ -182,6 +185,16 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
         list.visibility = if (channels.isEmpty()) View.GONE else View.VISIBLE
     }
 
+    private fun showKidsDialog() {
+        val channels = KidsRepository.channels
+        val labels = channels.map { "${it.name} — ${it.number}" }.toTypedArray()
+        AlertDialog.Builder(host, R.style.Theme_Aurora_Dialog)
+            .setTitle("Детские каналы")
+            .setItems(labels) { _, which -> host.showKidsChannel(channels[which].number) }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
     private fun play(channel: Channel, number: Int) {
         val state = ChannelControl.stateFor(host, number)
         if (!state.isLive) {
@@ -192,6 +205,7 @@ class ChannelsScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pr
             putStringArrayListExtra(PlayerActivity.EXTRA_URIS, arrayListOf(channel.url))
             putStringArrayListExtra(PlayerActivity.EXTRA_TITLES, arrayListOf(channel.name))
             putExtra(PlayerActivity.EXTRA_START, 0)
+            putExtra(PlayerActivity.EXTRA_CHANNEL, number)
         }
         try {
             host.startActivity(intent)

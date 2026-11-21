@@ -29,7 +29,7 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
- * Общее расписание кинозалов: все каналы 20–32 на ближайший сеанс,
+ * Общее расписание кинозалов: все каналы 20–43 на ближайший сеанс,
  * как в телевизионной афише. Синий фон, блики, анимация строк.
  */
 class CinemaScheduleActivity : Activity() {
@@ -118,7 +118,7 @@ class CinemaScheduleActivity : Activity() {
             Color.rgb(139, 213, 255)
         }
 
-        content.addView(text("AURORA TV  •  КИНОЗАЛЫ 20–32", 14f, accent, true))
+        content.addView(text("AURORA TV  •  КИНОЗАЛЫ 20–43", 14f, accent, true))
         content.addView(text("РАСПИСАНИЕ СЕАНСОВ", 36f, Color.WHITE, true))
         content.addView(
             text(

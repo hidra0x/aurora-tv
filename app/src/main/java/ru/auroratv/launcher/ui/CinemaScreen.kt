@@ -15,6 +15,7 @@ import ru.auroratv.launcher.core.AppEntry
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.CinemaSchedule
+import ru.auroratv.launcher.core.NewYearEvent
 import ru.auroratv.launcher.core.Prefs
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -39,10 +40,15 @@ class CinemaScreen(host: MainActivity, prefs: Prefs) : LauncherScreen(host, pref
             gravity = Gravity.CENTER_VERTICAL
         }
         header.addView(
-            makeText("Кинозалы", 26f, color(R.color.text), light = true),
+            makeText(
+                if (NewYearEvent.isActive(host)) "Новогодние кинозалы" else "Кинозалы",
+                26f,
+                color(R.color.text),
+                light = true
+            ),
             LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         )
-        countLabel = makeText("20–32", 11f, color(R.color.text_faint))
+        countLabel = makeText("20–43", 11f, color(R.color.text_faint))
         header.addView(countLabel)
         root.addView(
             header,

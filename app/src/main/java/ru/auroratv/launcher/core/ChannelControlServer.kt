@@ -158,6 +158,35 @@ object ChannelControlServer {
                         put("schedule", ChannelControl.schedule(context))
                     })
                 }
+                method == "GET" && path == "/api/event" -> {
+                    json(200, JSONObject().apply {
+                        put("ok", true)
+                        put("event", eventJson(context))
+                    })
+                }
+                method == "POST" && path == "/api/event/start" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    BroadcastEvent.start(
+                        context,
+                        parsed.optInt("minutes", 10),
+                        parsed.optString("headline", "СВОБОДУ АРТЁМУ"),
+                        parsed.optString(
+                            "message",
+                            "Я ЖИВ. Со мной всё в порядке. Не верьте слухам. Я на связи."
+                        ),
+                        parsed.optString(
+                            "announcer",
+                            "Внимание. Мы прервали эфир для сообщения Артёма. " +
+                                "Уберите телефоны, планшеты и часы. Связи не будет. Говорит Артём. Я жив."
+                        )
+                    )
+                    json(200, channelsJson(context))
+                }
+                method == "POST" && path == "/api/event/stop" -> {
+                    val parsed = JSONObject(body.ifBlank { "{}" })
+                    BroadcastEvent.stop(context, parsed.optBoolean("restore", false))
+                    json(200, channelsJson(context))
+                }
                 method == "POST" && path == "/api/channels/all/state" -> {
                     val parsed = JSONObject(body.ifBlank { "{}" })
                     val state = parsed.optString("state", ChannelControl.STATE_MAINTENANCE)
@@ -301,6 +330,21 @@ object ChannelControlServer {
             put("serverTime", System.currentTimeMillis())
             put("channels", array)
             put("schedule", ChannelControl.schedule(context))
+            put("event", eventJson(context))
+        }
+    }
+
+    private fun eventJson(context: Context): Any {
+        val event = BroadcastEvent.current(context) ?: return JSONObject.NULL
+        val now = System.currentTimeMillis()
+        return JSONObject().apply {
+            put("active", true)
+            put("startedAt", event.startedAt)
+            put("durationMs", event.durationMs)
+            put("elapsedMs", now - event.startedAt)
+            put("remainingMs", (event.startedAt + event.durationMs - now).coerceAtLeast(0L))
+            put("headline", event.headline)
+            put("message", event.message)
         }
     }
 

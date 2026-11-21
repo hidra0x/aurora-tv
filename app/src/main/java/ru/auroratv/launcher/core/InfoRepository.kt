@@ -31,7 +31,7 @@ object InfoRepository {
     fun tickerText(): String {
         val parts = ArrayList<String>()
         parts.add("AURORA TV  •  ИНФОКАНАЛ 0")
-        parts.add("Кинозалы 20–32  •  сеансы 14:00 и 18:00")
+        parts.add("Кинозалы 20–43  •  сеансы 14:00 и 18:00")
         parts.add("Перед сеансом — афиша, плашки и логотип AURORA TV")
         parts.add("Сервер управления — в настройках Aurora TV")
         parts.add("Профилактика каналов — по расписанию")
@@ -96,7 +96,7 @@ object InfoRepository {
             InfoEpisode(
                 "channels_video",
                 "13 кинозалов — трейлер",
-                "Кинозалы 20–32: коротко о каждом",
+                "Кинозалы 20–43: коротко о каждом",
                 16,
                 uri(R.raw.ad_channels)
             ),

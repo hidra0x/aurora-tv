@@ -55,6 +55,16 @@ object ChannelControl {
                 )
             )
         }
+        KidsRepository.channels.forEach { kids ->
+            result.add(
+                managed(
+                    kids.number,
+                    kids.name,
+                    "kids",
+                    states.optJSONObject(kids.number.toString())
+                )
+            )
+        }
         CinemaRepository.channels(context).forEach { channel ->
             result.add(
                 managed(

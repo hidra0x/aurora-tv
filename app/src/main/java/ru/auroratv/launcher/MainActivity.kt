@@ -27,11 +27,16 @@ import ru.auroratv.launcher.core.ChannelsRepository
 import ru.auroratv.launcher.core.CinemaChannel
 import ru.auroratv.launcher.core.CinemaRepository
 import ru.auroratv.launcher.core.InfoRepository
+import ru.auroratv.launcher.core.KidsChannelConfig
+import ru.auroratv.launcher.core.KidsRepository
 import ru.auroratv.launcher.core.ManagedChannel
 import ru.auroratv.launcher.core.NetworkState
+import ru.auroratv.launcher.core.NewYearEvent
 import ru.auroratv.launcher.core.Prefs
+import ru.auroratv.launcher.media.ChannelGuideActivity
 import ru.auroratv.launcher.media.CinemaPlayerActivity
 import ru.auroratv.launcher.media.CinemaScheduleActivity
+import ru.auroratv.launcher.media.KidsChannelActivity
 import ru.auroratv.launcher.media.PlayerActivity
 import ru.auroratv.launcher.ui.AppsScreen
 import ru.auroratv.launcher.ui.ChannelsScreen
@@ -41,6 +46,7 @@ import ru.auroratv.launcher.ui.HomeScreen
 import ru.auroratv.launcher.ui.LauncherScreen
 import ru.auroratv.launcher.ui.MediaScreen
 import ru.auroratv.launcher.ui.SettingsScreen
+import ru.auroratv.launcher.ui.SnowView
 import ru.auroratv.launcher.ui.VideoScreen
 import ru.auroratv.launcher.ui.dp
 import java.text.SimpleDateFormat
@@ -57,6 +63,7 @@ class MainActivity : Activity() {
     private lateinit var headerClock: TextView
     private lateinit var networkStatus: TextView
     private lateinit var tvButton: TextView
+    private lateinit var snowView: SnowView
     private lateinit var channelOverlay: LinearLayout
     private lateinit var channelNumberView: TextView
     private lateinit var channelNameView: TextView
@@ -109,6 +116,7 @@ class MainActivity : Activity() {
         headerClock = findViewById(R.id.headerClock)
         networkStatus = findViewById(R.id.networkStatus)
         tvButton = findViewById(R.id.tvButton)
+        snowView = findViewById(R.id.snow)
 
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
@@ -196,9 +204,11 @@ class MainActivity : Activity() {
         val number = channelInput.toString()
         val channel = channelFor(number)
         val cinema = cinemaChannelFor(number)
+        val kids = kidsChannelFor(number)
         channelNumberView.text = number
         channelNameView.text = when {
             number == "0" -> "Инфоканал"
+            kids != null -> kids.name
             cinema != null -> cinema.name
             channel != null -> channel.name
             else -> "Нет канала"
@@ -223,9 +233,12 @@ class MainActivity : Activity() {
         }
         val cinema = cinemaChannelFor(number)
         val channel = channelFor(number)
+        val kids = kidsChannelFor(number)
         hideChannelInput()
         if (number == "0") {
             showInfoChannel()
+        } else if (kids != null) {
+            showKidsChannel(kids.number)
         } else if (cinema != null) {
             showCinemaChannel(cinema.number)
         } else if (channel == null) {
@@ -243,6 +256,9 @@ class MainActivity : Activity() {
     private fun cinemaChannelFor(number: String): CinemaChannel? =
         number.toIntOrNull()?.let { CinemaRepository.channelFor(this, it) }
 
+    private fun kidsChannelFor(number: String): KidsChannelConfig? =
+        number.toIntOrNull()?.let { KidsRepository.channelFor(it) }
+
     private fun hideChannelInput() {
         channelHideRunnable?.let { handler.removeCallbacks(it) }
         channelHideRunnable = null
@@ -251,8 +267,10 @@ class MainActivity : Activity() {
     }
 
     fun showChannelMaintenance(number: Int, state: ManagedChannel) {
+        val kids = KidsRepository.channelFor(number)
         val title = when {
             number == 0 -> "Инфоканал обновляется"
+            kids != null -> "${kids.name} обновляется"
             state.state == ChannelControl.STATE_UPGRADING -> "Обновление канала $number"
             else -> "Профилактика канала $number"
         }
@@ -287,11 +305,20 @@ class MainActivity : Activity() {
             putStringArrayListExtra(PlayerActivity.EXTRA_URIS, arrayListOf(channel.url))
             putStringArrayListExtra(PlayerActivity.EXTRA_TITLES, arrayListOf(channel.name))
             putExtra(PlayerActivity.EXTRA_START, 0)
+            putExtra(PlayerActivity.EXTRA_CHANNEL, number)
         }
         try {
             startActivity(intent)
         } catch (_: Throwable) {
             toast("Не удалось открыть канал")
+        }
+    }
+
+    fun openGuide() {
+        try {
+            startActivity(Intent(this, ChannelGuideActivity::class.java))
+        } catch (_: Throwable) {
+            toast("Не удалось открыть телегид")
         }
     }
 
@@ -339,11 +366,26 @@ class MainActivity : Activity() {
             )
             putExtra(PlayerActivity.EXTRA_START, 0)
             putExtra(PlayerActivity.EXTRA_INFO_CHANNEL, true)
+            putExtra(PlayerActivity.EXTRA_CHANNEL, 0)
         }
         try {
             startActivity(intent)
         } catch (_: Throwable) {
             toast("Не удалось открыть инфоканал")
+        }
+    }
+
+    fun showKidsChannel(number: Int = KidsRepository.DEFAULT_CHANNEL) {
+        // Канал всегда открывает свой экран: в профилактике он показывает
+        // логотип и спокойную музыку вместо системного диалога.
+        try {
+            startActivity(
+                Intent(this, KidsChannelActivity::class.java).apply {
+                    putExtra(KidsChannelActivity.EXTRA_CHANNEL, number)
+                }
+            )
+        } catch (_: Throwable) {
+            toast("Не удалось открыть детский канал")
         }
     }
 
@@ -409,8 +451,18 @@ class MainActivity : Activity() {
         updateNav()
         headerClock.visibility = if (index == 0) View.GONE else View.VISIBLE
         applyHint()
+        updateSnow()
         target.onShown()
         if (focus) target.requestInitialFocus()
+    }
+
+    private fun updateSnow() {
+        if (!::snowView.isInitialized) return
+        snowView.visibility = if (current == 0 && NewYearEvent.isActive(this)) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
     }
 
     fun showHome() = showScreen(0)
@@ -641,6 +693,10 @@ class MainActivity : Activity() {
             }
         }
         when (keyCode) {
+            KeyEvent.KEYCODE_GUIDE -> {
+                openGuide()
+                return true
+            }
             KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_SETTINGS -> {
                 showSettings()
                 return true

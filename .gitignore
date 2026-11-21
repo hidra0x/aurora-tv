@@ -19,6 +19,7 @@ dist/
 # Local test screenshots.
 /screenshots/
 /test-artifacts/
+/release-assets/guide-demo-frames/
 
 # Generated info-channel intermediates (final MP4s live in res/raw).
 info/audio/
@@ -26,8 +27,18 @@ info/build/
 info/frames/
 info/tts_jobs.json
 
+# Generated kids-channel media and local speech-to-text models.
+/kids/build/
+/kids/downloads/
+/kids/audio/
+/kids/vosk/
+/kids/vosk-en.zip
+/kids/*_16k.wav
+/kids/transcript_*.json
+
 # OS / IDE noise.
 .DS_Store
 Thumbs.db
 .kotlin/
 *.log
+scripts/__pycache__/
