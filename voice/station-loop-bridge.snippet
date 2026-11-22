@@ -1,38 +1,45 @@
 Точки вставки в /opt/bin/voice-loop.sh на станции rio.
-Демон уже стоит в /data/local/bin/aurora-voice-emit и читает events.tsv.
+ПАТЧ ПРИМЕНЁН 22.11.2026: COPY_ORIGINAL=/opt/bin/voice-loop.sh.bak-aurora
+
+Демон: /data/local/bin/aurora-voice (README: docs/VOICE.md)
+Эмиттер: /data/local/bin/aurora-voice-emit  <-- НЕ /opt/bin!
+События: /data/local/tmp/aurora_voice/events.tsv
 Актуальный IP ТВ: 192.168.0.8 (конфиг демона уже обновлён).
 
 1) handle_wake(), сразу после строки:
        log "wake"
    добавить:
-       /opt/bin/aurora-voice-emit LISTENING ""
+       /data/local/bin/aurora-voice-emit LISTENING ""
 
 2) handle_wake(), сразу после строки:
        log "heard: $TXT"
    добавить:
-       /opt/bin/aurora-voice-emit LISTENING "$TXT"
+       /data/local/bin/aurora-voice-emit LISTENING "$TXT"
 
 3) handle_wake(), сразу после строки:
        led "$LEDDIR/yellow.led"
    добавить:
-       /opt/bin/aurora-voice-emit THINKING "$TXT"
+       /data/local/bin/aurora-voice-emit THINKING "$TXT"
    (при AUTO_COMMAND=1 демон сам отправит команду на ТВ, если текст содержит
     "включи / открой / поставь / выключи / канал / таймер / гид / радио")
 
 4) handle_wake(), в ветке *) сразу после строки:
        log "answer: $ANS"
    добавить:
-       /opt/bin/aurora-voice-emit ANSWERING "$ANS"
+       /data/local/bin/aurora-voice-emit ANSWERING "$ANS"
 
 5) handle_wake(), сразу после строки:
        log "platform back"
    добавить:
-       /opt/bin/aurora-voice-emit RESET
+       /data/local/bin/aurora-voice-emit RESET
+
+ВАЖНО про RESET: демон не сбрасывает фазы RADIO и TIMER (иначе эквалайзер
+и таймер закроются сразу после фразы). Для временных фаз RESET закрывает оверлей.
 
 Проверка после правки (без проговаривания):
-   /opt/bin/aurora-voice-emit LISTENING "включи радио"
-   /opt/bin/aurora-voice-emit THINKING "включи радио"
-   /opt/bin/aurora-voice-emit ANSWERING "Включаю радио"
-   /opt/bin/aurora-voice-emit RESET
+   /data/local/bin/aurora-voice-emit LISTENING "включи радио"
+   /data/local/bin/aurora-voice-emit THINKING "включи радио"
+   /data/local/bin/aurora-voice-emit ANSWERING "Включаю радио"
+   /data/local/bin/aurora-voice-emit RESET
    tail -5 /data/local/tmp/aurora_voice/events.tsv
    tail -10 /data/local/tmp/aurora-voice.log

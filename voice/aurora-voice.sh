@@ -121,7 +121,17 @@ handle_line() {
       post_json /api/voice/beat "{\"intensity\":$intensity}"
       ;;
     RESET)
-      post_json /api/voice/reset '{}'
+      # Не сбрасываем RADIO/TIMER: иначе эквалайзер и таймер закроются
+      # сразу после того, как Алиса договорит фразу (platform back).
+      status=$(wget -q -O - "$BASE_URL/api/voice/status" 2>/dev/null)
+      case "$status" in
+        *'"phase":"RADIO"'*|*'"phase":"TIMER"'*)
+          log "reset skipped: persistent phase"
+          ;;
+        *)
+          post_json /api/voice/reset '{}'
+          ;;
+      esac
       ;;
     *)
       log "unknown event kind: $kind"
