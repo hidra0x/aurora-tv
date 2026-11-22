@@ -36,6 +36,9 @@ info/tts_jobs.json
 /kids/*_16k.wav
 /kids/transcript_*.json
 
+# Local SSH/ADB keys — never commit.
+/voice/keys/
+
 # OS / IDE noise.
 .DS_Store
 Thumbs.db

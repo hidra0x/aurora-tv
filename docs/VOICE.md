@@ -42,17 +42,39 @@ Aurora TV принимает события и команды от демона 
 
 ## Установка (один раз с ПК)
 
-На ПК в корне репозитория:
+### Станция rio (root + SSH) — рабочий вариант
+
+Станция не использует ADB для загрузки: root и dropbear уже есть, скрипты
+заливаются по SSH. ADB-ключ и `192.168.0.93` здесь не нужны.
 
 ```powershell
-.\voice\install-from-pc.ps1 -AliceIp 192.168.0.2 -TvIp 192.168.0.3
+cd 'C:\AuroraTV'
+.\voice\install-from-pc-ssh.ps1 -StationIp 192.168.0.5 -TvIp 192.168.0.3
 ```
 
-Скрипт подключится по ADB к Алисе, зальёт демон и запустит установку как root.
-Дальше ПК можно выключить: автозапуск стоит в Magisk `service.d` (или
-`/etc/init.d` / `/data/local/userinit.sh` — в зависимости от прошивки).
+Скрипт копирует `aurora-voice.sh`, `emit.sh`, `install.sh` в `/opt/bin/`
+через `scp -O -i C:\lite-kit\work\station_rsa`, запускает установку как root
+и создаёт автозапуск `/etc/init.d/S98aurora-voice` (на прошивке rio скрипты
+без префикса `S##` не стартуют). Демон живёт в `/data/local/bin/aurora-voice`,
+конфиг — `/data/local/etc/aurora-voice.conf`, события —
+`/data/local/tmp/aurora_voice/events.tsv`.
 
-Для ручной установки прямо на станции:
+Переменные окружения для кастомного запуска:
+
+```powershell
+.\voice\install-from-pc-ssh.ps1 -StationIp <IP> -SshKey <PATH> -TvIp <TV_IP>
+```
+
+### Универсальный ADB-вариант (для обычных Android-устройств)
+
+```powershell
+.\voice\install-from-pc.ps1 -AliceIp <IP> -TvIp <IP>
+```
+
+Требует авторизованный ADB. Ставит автозапуск через Magisk `service.d`,
+`/etc/init.d` или `/data/local/userinit.sh`.
+
+Для ручной установки прямо на устройстве:
 
 ```sh
 su
@@ -117,10 +139,17 @@ exec("aurora-voice-emit ANSWERING \"" + escape(answer) + "\"");
 ### Важно про точность фаз
 
 Универсального публичного API у Алисы нет: точки «слушает/думает» есть только
-внутри её собственного приложения. Поэтому для точного отображения фаз нужен
-хук (LSPosed) или автоматизация, которая пишет события в `events.tsv`.
-Без хука работают ручной режим и команды через `aurora-voice-emit` — это
-достаточно, чтобы проверить весь экран и все команды на ТВ.
+внутри её собственного приложения. На станции rio их не нужно искать в
+приложении: собственный `/opt/bin/voice-loop.sh` уже ловит `onPhraseSpotted`
+в `/data/quasar/daemons_logs/maind.log` и знает все фазы. Достаточно в его
+точках (`handle_wake`, `record start`, `burst + yellow`, `speak.sh`,
+`platform back`) писать строки через `aurora-voice-emit`.
+
+LSPosed нужен только если понадобятся внутренние фазы именно приложения
+Алисы, которых нет в логе. Для текущей задачи он избыточен.
+
+Без автоматики работают ручной режим и команды через `aurora-voice-emit` —
+этого достаточно, чтобы проверить весь экран и все команды на ТВ.
 
 ## HTTP API Aurora TV
 

@@ -1,4 +1,4 @@
-#!/system/bin/sh
+#!/bin/sh
 # Установка голосового моста Aurora TV на рутированную Алису.
 # Запускать ОДИН РАЗ на самой станции (adb shell / Termux как root).
 # Дальше демон стартует сам при включении — ПК не нужен.
@@ -57,13 +57,14 @@ EOF
   chmod 755 /data/adb/service.d/aurora-voice.sh
   echo "Автозапуск: Magisk service.d установлен"
 elif [ -d /etc/init.d ]; then
-  cat > /etc/init.d/aurora-voice <<'EOF'
-#!/system/bin/sh
+  # На станции rio init.d скрипты запускаются только с префиксом S##.
+  cat > /etc/init.d/S98aurora-voice <<'EOF'
+#!/bin/sh
 sleep 20
 /data/local/bin/aurora-voice start
 EOF
-  chmod 755 /etc/init.d/aurora-voice
-  echo "Автозапуск: /etc/init.d установлен"
+  chmod 755 /etc/init.d/S98aurora-voice
+  echo "Автозапуск: /etc/init.d/S98aurora-voice установлен"
 else
   # Fallback для прошивок с поддержкой userinit.sh.
   touch /data/local/userinit.sh

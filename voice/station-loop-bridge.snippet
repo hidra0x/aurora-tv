@@ -1,0 +1,37 @@
+Точки вставки в /opt/bin/voice-loop.sh на станции rio.
+Демон уже стоит в /data/local/bin/aurora-voice-emit и читает events.tsv.
+
+1) handle_wake(), сразу после строки:
+       log "wake"
+   добавить:
+       /opt/bin/aurora-voice-emit LISTENING ""
+
+2) handle_wake(), сразу после строки:
+       log "heard: $TXT"
+   добавить:
+       /opt/bin/aurora-voice-emit LISTENING "$TXT"
+
+3) handle_wake(), сразу после строки:
+       led "$LEDDIR/yellow.led"
+   добавить:
+       /opt/bin/aurora-voice-emit THINKING "$TXT"
+   (при AUTO_COMMAND=1 демон сам отправит команду на ТВ, если текст содержит
+    "включи / открой / поставь / выключи / канал / таймер / гид / радио")
+
+4) handle_wake(), в ветке *) сразу после строки:
+       log "answer: $ANS"
+   добавить:
+       /opt/bin/aurora-voice-emit ANSWERING "$ANS"
+
+5) handle_wake(), сразу после строки:
+       log "platform back"
+   добавить:
+       /opt/bin/aurora-voice-emit RESET
+
+Проверка после правки (без проговаривания):
+   /opt/bin/aurora-voice-emit LISTENING "включи радио"
+   /opt/bin/aurora-voice-emit THINKING "включи радио"
+   /opt/bin/aurora-voice-emit ANSWERING "Включаю радио"
+   /opt/bin/aurora-voice-emit RESET
+   tail -5 /data/local/tmp/aurora_voice/events.tsv
+   tail -10 /data/local/tmp/aurora-voice.log
